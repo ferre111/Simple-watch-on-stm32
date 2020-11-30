@@ -27,7 +27,6 @@
 /* USER CODE BEGIN Includes */
 #include "pressure_sensor.h"
 #include "OLED.h"
-#include "error_codes.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,8 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t j = 0;
-uint8_t k = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,7 +67,6 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint32_t err;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -92,39 +89,58 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  err = pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
-  if(ERROR_OCCURRED(err))
-  {
-      __NOP();
-  }
-  err = pressure_sensor_read_calib_data();
-  if(ERROR_OCCURRED(err))
-  {
-      __NOP();
-  }
+  pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
+  pressure_sensor_read_calib_data();
   OLED_Init();
+  OLED_setDisplayOn();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int32_t temp, pres;
+  uint8_t avr = 100;
+  int32_t temp, pres, init_pres = 0;
+  float alt;
+  char tmp[20];
+  for(uint8_t i = 0; i < avr; i++)
+  {
+      static int32_t tmp_init_pres = 0;
+
+      pressure_sensor_read_temp_and_pres();
+      pressure_sensor_get_pres(&tmp_init_pres);
+
+      init_pres += tmp_init_pres;
+  }
+  init_pres /= avr;
+
   while (1)
   {
-    pressure_sensor_read_temp_and_pres();
-    if(ERROR_OCCURRED(err))
+    pres = 0;
+    temp = 0;
+
+    for(uint8_t i = 0; i < avr; i++)
     {
-        __NOP();
+        int32_t tmp_pres = 0, tmp_temp = 0;
+
+        pressure_sensor_read_temp_and_pres();
+        pressure_sensor_get_temp(&tmp_temp);
+        pressure_sensor_get_pres(&tmp_pres);
+
+        pres += tmp_pres;
+        temp += tmp_temp;
     }
-    pressure_sensor_get_temp(&temp);
-    if(ERROR_OCCURRED(err))
-    {
-        __NOP();
-    }
-    pressure_sensor_get_pres(&pres);
-    if(ERROR_OCCURRED(err))
-    {
-        __NOP();
-    }
+    pres /= avr;
+    temp /= avr;
+
+    pressure_sensor_calc_dif_alt(init_pres, pres, &alt);
+
+    snprintf(tmp, 20, "Temperature: %d.%dC", temp / 10, temp % 10);
+    OLED_printText(0, 0, tmp);
+    snprintf(tmp, 20, "Pressure: %d.%d%dhPa", pres / 100, (pres % 100) / 10, pres % 10);
+    OLED_printText(1, 0, tmp);
+    snprintf(tmp, 20, "Altitude: %fm", alt);
+    OLED_printText(2, 0, tmp);
+    OLED_update();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

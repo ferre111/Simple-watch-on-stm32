@@ -66,127 +66,81 @@ static uint8_t aux_tab[3];
 
 //----------------------------------------------------------------------
 
-static uint32_t read_uncomp_temp(void);
-static uint32_t read_uncomp_pres(void);
+static void read_uncomp_temp(void);
+static void read_uncomp_pres(void);
 static void calc_true_temp(void);
 static void calc_true_pres(void);
 
 //----------------------------------------------------------------------
 
-uint32_t pressure_sensor_read_calib_data(void)
+void pressure_sensor_read_calib_data(void)
 {
-    uint32_t err = ERR_PRESSURE_SENSOR_MASK;
-
     for(uint8_t i = 0; i < COUNT_OF_CALIB_REG; i++)
     {
-        err = HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xAA + i * 2, 1, aux_tab, 2, I2C_TIMEOUT);
-        if(ERROR_OCCURRED(err)) return err;
+        HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xAA + i * 2, 1, aux_tab, 2, I2C_TIMEOUT);
         *(&ctx.calib_data.AC1 + i) = (aux_tab[0] << 8) + aux_tab[1];
     }
-    return err;
 }
 
 //----------------------------------------------------------------------
 
-uint32_t pressure_sensor_set_sensor_mode(enum pressure_sensor_mode sensor_mode)
+void pressure_sensor_set_sensor_mode(enum pressure_sensor_mode sensor_mode)
 {
-    uint32_t err = ERR_PRESSURE_SENSOR_MASK;
-    if(sensor_mode > 4)
-    {
-        err |= ERR_WRONG_MODE;
-        return err;
-    }
     ctx.mode = sensor_mode;
-
-    return err;
 }
 
 //----------------------------------------------------------------------
 
-uint32_t pressure_sensor_read_temp_and_pres(void)
+void pressure_sensor_read_temp_and_pres(void)
 {
-    uint32_t err = ERR_PRESSURE_SENSOR_MASK;
-
-    err = read_uncomp_temp();
-    if(ERROR_OCCURRED(err)) return err;
-    err = read_uncomp_pres();
-    if(ERROR_OCCURRED(err)) return err;
+    read_uncomp_temp();
+    read_uncomp_pres();
     calc_true_temp();
     calc_true_pres();
-
-    return err;
 }
 
 //----------------------------------------------------------------------
 
-uint32_t pressure_sensor_get_temp(int32_t *temp)
+void pressure_sensor_get_temp(int32_t *temp)
 {
-    uint32_t err = ERR_PRESSURE_SENSOR_MASK;
-
-    if(temp == NULL)
-    {
-        err |= ERR_NULL_POINTER;
-        return err;
-    }
-
     *temp = ctx.temp.true_temp;
-
-    return err;
-}
-
-uint32_t pressure_sensor_get_pres(int32_t *pres)
-{
-    uint32_t err = ERR_PRESSURE_SENSOR_MASK;
-
-    if(pres == NULL)
-    {
-        err |= ERR_NULL_POINTER;
-        return err;
-    }
-
-    *pres = ctx.true_pres;
-
-    return err;
 }
 
 //----------------------------------------------------------------------
 
-uint32_t pressure_sensor_calc_dif_alt(int32_t initial_pres, int32_t actual_pres)
+void pressure_sensor_get_pres(int32_t *pres)
 {
-    //todo
-    return 0;
+    *pres = ctx.true_pres;
+}
+
+//----------------------------------------------------------------------
+
+void pressure_sensor_calc_dif_alt(int32_t initial_pres, int32_t actual_pres, float *alt)
+{
+    *alt = 44330 * (1 - pow((float)actual_pres/(float)initial_pres, 0.190294f));
 }
 
 //----------------------------------------------------------------------
 // Static functions
 //----------------------------------------------------------------------
 
-static uint32_t read_uncomp_temp(void)
+static void read_uncomp_temp(void)
 {
-    uint32_t err = ERR_PRESSURE_SENSOR_MASK;
-
     aux_tab[0] = 0x2E;
-    err = HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, 0xF4, 1, aux_tab, 1, I2C_TIMEOUT);
-    if(ERROR_OCCURRED(err)) return err;
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, 0xF4, 1, aux_tab, 1, I2C_TIMEOUT);
     HAL_Delay(5);
 
-    err = HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xF6, 1, aux_tab, 2, I2C_TIMEOUT);
-    if(ERROR_OCCURRED(err)) return err;
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xF6, 1, aux_tab, 2, I2C_TIMEOUT);
 
     ctx.temp.uncomp_temp = (aux_tab[0] << 8) + aux_tab[1];
-
-    return err;
 }
 
 //----------------------------------------------------------------------
 
-static uint32_t read_uncomp_pres(void)
+static void read_uncomp_pres(void)
 {
-    uint32_t err = ERR_PRESSURE_SENSOR_MASK;
-
     aux_tab[0] = 0x34 + (ctx.mode << 6);
-    err = HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, 0xF4, 1, aux_tab, 1, I2C_TIMEOUT);
-    if(ERROR_OCCURRED(err)) return err;
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, 0xF4, 1, aux_tab, 1, I2C_TIMEOUT);
 
     switch(ctx.mode)
     {
@@ -203,16 +157,12 @@ static uint32_t read_uncomp_pres(void)
         HAL_Delay(26);
         break;
     default:
-        err |= ERR_WRONG_MODE;
-        return err;
+        break;
     }
 
-    err = HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xF6, 1, aux_tab, 3, I2C_TIMEOUT);
-    if(ERROR_OCCURRED(err)) return err;
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xF6, 1, aux_tab, 3, I2C_TIMEOUT);
 
     ctx.uncomp_pres = ((aux_tab[0] << 16) + (aux_tab[1] << 8) + aux_tab[2]) >> (8 - ctx.mode);
-
-    return err;
 }
 
 //----------------------------------------------------------------------
