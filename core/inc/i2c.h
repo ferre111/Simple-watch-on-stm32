@@ -33,7 +33,7 @@
 extern I2C_HandleTypeDef hi2c2;
 
 /* USER CODE BEGIN Private defines */
-
+# define I2C_TIMEOUT 100
 /* USER CODE END Private defines */
 
 void MX_I2C2_Init(void);

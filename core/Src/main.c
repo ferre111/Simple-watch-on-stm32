@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "OLED.h"
+#include "pressure_sensor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,6 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PRES_TAB_SIZE 10
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -88,21 +90,68 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
+
+  pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
+  pressure_sensor_read_calib_data();
   OLED_Init();
   OLED_setDisplayOn();
-  //OLED_drawLine(0,  0, 100, 30);
-  OLED_clearScreen();
-  OLED_printText(0, 0, "abcdefghijklmnop");
-  OLED_printText(1, 0, "1234567890!@#$%^&*()");
-  OLED_update();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
+  int32_t pres_tab[PRES_TAB_SIZE];
+
+  uint8_t i, j = 0;
+  for(i = 0; i < PRES_TAB_SIZE; i++){
+      pres_tab[i] = 0;
+  }
+
+
+  int32_t temp, pres, init_pres, pres_avg;
+  float alt;
+  char tmp[20];
+
+
+  init_pres = 0;
+  for(i = 0; i < PRES_TAB_SIZE; i++){
+      pressure_sensor_read_temp_and_pres();
+      pressure_sensor_get_pres(&temp);
+      init_pres += temp;
+  }
+  init_pres /= PRES_TAB_SIZE;
+
   while (1)
   {
+      pressure_sensor_read_temp_and_pres();
+      pressure_sensor_get_temp(&temp);
+      pressure_sensor_get_pres(&pres_tab[i]);
+
+      pres_avg = 0;
+      for(j = 0; j < PRES_TAB_SIZE; j++)
+      {
+          pres_avg += pres_tab[j];
+      }
+      pres_avg = pres_avg / PRES_TAB_SIZE;
+
+      pressure_sensor_calc_dif_alt(init_pres, pres_avg, &alt);
+
+      snprintf(tmp, 20, "Temperature: %d.%dC", temp / 10, temp % 10);
+      OLED_printText(0, 0, tmp);
+      snprintf(tmp, 20, "Pressure: %d.%d%dhPa", pres_avg / 100, (pres_avg % 100) / 10, pres_avg % 10);
+      OLED_printText(1, 0, tmp);
+      snprintf(tmp, 20, "Altitude: %fm", alt);
+      OLED_printText(2, 0, tmp);
+      OLED_update();
+
       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-      HAL_Delay(200);
+      //HAL_Delay(100);
+
+      i = ( i + 1 ) % PRES_TAB_SIZE;
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

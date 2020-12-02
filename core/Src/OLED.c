@@ -8,7 +8,7 @@
 #include "i2c.h"
 #include "ascii_font.h"
 
-// *****************************************************************************************************
+//---------------------------------------------------------------------------------------
 // DEFINES
 #define OLED_ADDRESS 0b01111000
 
@@ -29,7 +29,7 @@
 #define OLED_CMD_SetDisplayOFF                      0xAE
 #define OLED_CMD_EnableChargePumpDuringDisplay      0x8D
 
-//  ---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 // INIT BYTE STREAM
 
 const uint8_t initSequence[33] = {
@@ -89,7 +89,7 @@ const uint8_t initSequence[33] = {
 };
 
 
-//  ---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 /* STATIC VARIABLES */
 /*  display data buffer*/
 //  7 pages of 128 8-bit columns
@@ -104,7 +104,7 @@ const uint8_t initSequence[33] = {
 static uint8_t          buffer[OLED_NUM_OF_PAGES][OLED_X_SIZE];
 static uint8_t          addressArray[3];
 
-//  ---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 /* STATIC FUNCTIONS */
 /*send single command to driver*/
 static void sendCommand(uint8_t command)
@@ -138,7 +138,7 @@ static void writeNextColumn(uint8_t data)
 }
 
 
-// *****************************************************************************************************
+//---------------------------------------------------------------------------------------
 /* API functions */
 
 // OK
@@ -190,7 +190,7 @@ void OLED_printText(uint8_t verse, uint8_t column, char * text)
 }
 
 
-// TODO
+// OK
 void OLED_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
     static float tan = 0.0f;
@@ -234,10 +234,8 @@ void OLED_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 
     if(y1 - y0 > 0)
         yLen = y1 - y0;
-
     else
         yLen = y0 - y1;
-
 
     if(xLen > yLen)
         numOfIterations = xLen;
@@ -246,8 +244,8 @@ void OLED_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 
     float yTemp = 0, xTemp = 0;
 
-    if(1){
-        //
+    if(1)
+    {
         for(uint8_t i = 0; i < numOfIterations; i++)
         {
             buffer[ ( uint8_t ) y / 8 ][ ( uint8_t ) x ] |= 1 << ( (uint8_t) y % 8);
@@ -271,11 +269,7 @@ void OLED_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
                     x--;
                 xTemp = 0;
             }
-//            y += tan;
-//            x += oneOverTan;
         }
-
-       //} while (x != x1 || y != y1);
     }
 }
 
@@ -292,4 +286,16 @@ void OLED_setInversed(uint8_t tf){
         sendCommand(OLED_CMD_SetInversedDisplay);
     else
         sendCommand(OLED_CMD_SetNotInversedDisplay);
+}
+
+void OLED_drawImage(uint8_t xPos, uint8_t yPos, uint8_t image[]){
+    uint8_t numOfCols = image[0];
+    uint8_t numOfVerses = image[1];
+    uint8_t rem = yPos % 7;
+    if(rem != 0)
+    {
+        numOfVerses++;
+    }
+
+
 }

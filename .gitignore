@@ -1,0 +1,7 @@
+/Debug/
+**/.cproject
+**/.mxproject
+**/.settings
+**/STM32F103C8TX_FLASH.ld
+**/zegarek Debug.launch
+**/.project

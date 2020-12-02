@@ -82,4 +82,14 @@ void OLED_setDisplayOff();
 
 void OLED_setInversed(uint8_t tf);
 
+/**
+ * @brief draw image on display in specified position ( buffered )
+ * @param xPos - x coordinate for upper left corner of image
+ * @param yPos - y coordinate for upper left corner of image
+ * @param image - image array where first byte is horizontal size,
+ * second byte is vertical size and following ( horizontal size ) * ( vertical size) / 8
+ * bytes describe the image ( each byte describe one 8-bit column )
+ */
+void OLED_drawImage(uint8_t xPos, uint8_t yPos, uint8_t image[]);
+
 #endif
