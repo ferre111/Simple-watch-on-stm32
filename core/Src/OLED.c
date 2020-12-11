@@ -103,6 +103,7 @@ const uint8_t initSequence[33] = {
 //  7   .
 static uint8_t          buffer[OLED_NUM_OF_PAGES][OLED_X_SIZE];
 static uint8_t          addressArray[3];
+static uint8_t i, j, v, c;
 
 //---------------------------------------------------------------------------------------
 /* STATIC FUNCTIONS */
@@ -162,9 +163,9 @@ void OLED_update()
 // OK
 void OLED_clearScreen()
 {
-    for(uint8_t p = 0; p < OLED_NUM_OF_PAGES; p++){
-        for(uint8_t x = 0; x < OLED_X_SIZE; x++){
-            buffer[p][x] = 0;
+    for(i = 0; i < OLED_NUM_OF_PAGES; i++){
+        for(uint8_t j = 0; j < OLED_X_SIZE; j++){
+            buffer[i][j] = 0;
         }
     }
 }
@@ -172,8 +173,7 @@ void OLED_clearScreen()
 // OK
 void OLED_printText(uint8_t verse, uint8_t column, char * text)
 {
-    uint8_t i = 0;
-    uint8_t j = 0;
+    i = 0;
     while(text[i] != '\0')
     {
         for(j = 0; j < 5; j++){
@@ -238,15 +238,15 @@ void OLED_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
         yLen = y0 - y1;
 
     if(xLen > yLen)
-        numOfIterations = xLen;
+        numOfIterations = xLen + 1;
     else
-        numOfIterations = yLen;
+        numOfIterations = yLen + 1;
 
     float yTemp = 0, xTemp = 0;
 
     if(1)
     {
-        for(uint8_t i = 0; i < numOfIterations; i++)
+        for(i = 0; i < numOfIterations; i++)
         {
             buffer[ ( uint8_t ) y / 8 ][ ( uint8_t ) x ] |= 1 << ( (uint8_t) y % 8);
 
@@ -273,29 +273,104 @@ void OLED_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     }
 }
 
-void OLED_setDisplayOn(){
+void OLED_setDisplayOn()
+{
     sendCommand(OLED_CMD_SetDisplayON);
 }
 
-void OLED_setDisplayOff(){
+void OLED_setDisplayOff()
+{
     sendCommand(OLED_CMD_SetDisplayOFF);
 }
 
-void OLED_setInversed(uint8_t tf){
+void OLED_setInversed(uint8_t tf)
+{
     if(tf)
         sendCommand(OLED_CMD_SetInversedDisplay);
     else
         sendCommand(OLED_CMD_SetNotInversedDisplay);
 }
 
-void OLED_drawImage(uint8_t xPos, uint8_t yPos, uint8_t image[]){
-    uint8_t numOfCols = image[0];
-    uint8_t numOfVerses = image[1];
-    uint8_t rem = yPos % 7;
+void OLED_drawImage(uint8_t xPos, uint8_t yPos,const uint8_t image[])
+{
+    uint8_t numOfCols = image[0] % OLED_X_SIZE;
+    uint8_t numOfVerses = image[1] % OLED_NUM_OF_PAGES;
+
+
+    i = 2;
+    uint8_t rem = yPos % 8;
+    uint8_t startingVerse = yPos / 8;
     if(rem != 0)
     {
         numOfVerses++;
     }
 
-
+    for(v = startingVerse; v < startingVerse + numOfVerses; v++)
+    {
+        if(v == startingVerse)
+        {
+            for(c = xPos; c < numOfCols + xPos; c++)
+            {
+                buffer[v][c] = image[i++] << rem;
+            }
+        }
+        else if (v != startingVerse + numOfVerses - 1 )
+        {
+            for(c = xPos; c < numOfCols + xPos; c++)
+            {
+                buffer[v][c] = image[i - numOfCols] >> (8 - rem);
+                buffer[v][c] |= image[i++] << rem;
+            }
+        }
+        else
+        {
+            for(c = xPos; c < numOfCols + xPos; c++)
+            {
+                buffer[v][c] = image[i++ - numOfCols] >> (8 - rem);
+            }
+        }
+    }
 }
+
+void OLED_drawRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, enum OLED_Color color)
+{
+    uint8_t rem0 = y0 % 8;
+    uint8_t rem1 = y1 % 8;
+
+    v = y0 / 8;
+    c = x0;
+    while(c <= x1)
+    {
+        if(color == WHITE)
+            buffer[v][c++] |= 0xFF << rem0;
+        else
+            buffer[v][c++] &= ~(0xFF << rem0);
+    }
+    v++;
+
+    while(v < y1 / 8)
+    {
+        c = x0;
+        while(c <= x1)
+        {
+            if(color == WHITE)
+                buffer[v][c++] = 0xFF;
+            else
+                buffer[v][c++] = 0x00;
+        }
+        v++;
+    }
+
+    if(y1 % 8)
+    {
+        c = x0;
+        while(c <= x1)
+        {
+            if(color == WHITE)
+                buffer[v][c++] |= 0xFF >> ( 8 - rem0 );
+            else
+                buffer[v][c++] &= ~(0xFF >> ( 8 - rem1 ));
+        }
+    }
+}
+

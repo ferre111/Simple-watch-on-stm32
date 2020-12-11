@@ -24,6 +24,12 @@
 #define OLED_PRESERVE_TRUE                          0
 #define OLED_PRESERVE_FALSE                         1
 
+enum OLED_Color
+{
+    WHITE,
+    BLACK
+};
+
 /* API FUNCTIONS */
 
 /**
@@ -89,7 +95,27 @@ void OLED_setInversed(uint8_t tf);
  * @param image - image array where first byte is horizontal size,
  * second byte is vertical size and following ( horizontal size ) * ( vertical size) / 8
  * bytes describe the image ( each byte describe one 8-bit column )
+ * @retval void
  */
-void OLED_drawImage(uint8_t xPos, uint8_t yPos, uint8_t image[]);
+void OLED_drawImage(uint8_t xPos, uint8_t yPos,const uint8_t image[]);
+
+/**
+ * @brief draw rectangle on display
+ * @param x0 - x coordinate of upper left corner
+ * @param y0 - y coordinate of upper left corner
+ * @param x1 - x coordinate of lower right corner
+ * @param y1 - y coordinate of lower right corner
+ * @retval void
+ */
+void OLED_drawRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, enum OLED_Color color);
+
+/**
+ * @brief clear rectangle on display
+ * @param x0 - x coordinate of upper left corner
+ * @param y0 - y coordinate of upper left corner
+ * @param x1 - x coordinate of lower right corner
+ * @param y1 - y coordinate of lower right corner
+ * @retval void
+ */
 
 #endif
