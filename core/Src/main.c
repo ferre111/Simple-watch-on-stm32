@@ -111,18 +111,22 @@ int main(void)
 
   while (1)
   {
+/*
       HAL_Delay(100);
       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
       snprintf(tmp, 20, "Temperature: %d.%dC", 123 / 10, 123 % 10);
       OLED_printText(2, 0, tmp);
-      //OLED_drawImage(10,  10, imageOne);
+      OLED_drawImage(10,  10, imageOne);
 
-      OLED_drawLine(9, 0, 9, 10);
+      OLED_drawLine(9, 0, 50, 50);
 
       OLED_drawLine(7, 0, 7, 25);
 
+*/
+
       OLED_drawRect(10, 10, 30, 25, WHITE);
+      OLED_update();
       OLED_drawRect(13, 13, 20, 20, BLACK);
       OLED_update();
 
