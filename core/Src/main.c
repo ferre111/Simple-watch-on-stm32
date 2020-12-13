@@ -69,6 +69,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -109,26 +110,38 @@ int main(void)
 
   char tmp[20];
 
+  uint8_t text1 = 0;
+  uint8_t line2 = 0;
+  uint8_t rect1 = 0;
+  uint8_t image1 = 0;
+
+
+  OLED_createTextField(&text1, 2, 0, "derw");
+
+  OLED_createRectangle(&rect1, 10, 10, 3, 3);
+
+  OLED_createImage(&image1, 20, 10, imageOne);
+
+  OLED_createLine(&line2, 1, 31, 127, 45);
+
+  uint8_t x, y = 0;
   while (1)
   {
-/*
-      HAL_Delay(100);
+
+      //HAL_Delay(20);
       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      x++;
+      if(x % 2)
+          y--;
+      OLED_textFieldSetText(text1, tmp);
+      //WHAL_Delay(Delay)
 
-      snprintf(tmp, 20, "Temperature: %d.%dC", 123 / 10, 123 % 10);
-      OLED_printText(2, 0, tmp);
-      OLED_drawImage(10,  10, imageOne);
+      OLED_lineMoveStart(line2, x % 127, 12);
+      OLED_lineMoveEnd(line2, 127 - ( y % 128 ) , 55);
 
-      OLED_drawLine(9, 0, 50, 50);
-
-      OLED_drawLine(7, 0, 7, 25);
-
-*/
-
-      OLED_drawRect(10, 10, 30, 25, WHITE);
       OLED_update();
-      OLED_drawRect(13, 13, 20, 20, BLACK);
-      OLED_update();
+
+
 
     /* USER CODE END WHILE */
 
