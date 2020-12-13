@@ -11,6 +11,8 @@
 #include <math.h>
 #include "i2c.h"
 
+#define PRESSUURE_SENSOR_ADDR 0xEE
+
 enum pressure_sensor_mode
 {
     PRESSURE_SENSOR_ULTRA_LOW_POWER,

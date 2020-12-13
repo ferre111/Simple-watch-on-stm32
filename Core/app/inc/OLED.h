@@ -5,7 +5,7 @@
  *      Author: Wiktor Lechowicz
  *
  *      This is library for SSD1306 based OLED with I2C interface.
- *      To use this you have to specify I2C module in line 14
+ *      To use this you have to specify I2C module ?where?
  */
 
 #include "stm32f1xx.h"
@@ -14,73 +14,72 @@
 #ifndef OLED_H_
 #define OLED_H_
 
+// * DEFINES TO BE MODIFIED BY USER */
 #define OLED_I2C_HANDLE hi2c1
 
-// HW specific defines
-#define OLED_X_SIZE									128
-#define OLED_Y_SIZE									64
-#define OLED_NUM_OF_PAGES							8
+#define OLED_X_SIZE                                 128
+#define OLED_Y_SIZE                                 64
+#define OLED_NUM_OF_PAGES                           8
 
-#define OLED_ADDRESS 0b01111000
+#define OLED_PRESERVE_TRUE                          0
+#define OLED_PRESERVE_FALSE                         1
 
-// Control byte options
-#define OLED_CONTROL_BYTE_				0b00000000
-	#define _OLED_SINGLE_BYTE					0b10000000
-	#define _OLED_MULTIPLE_BYTES				0b00000000
-	#define _OLED_COMMAND						0b00000000
-	#define _OLED_DATA							0b01000000
+/* API FUNCTIONS */
 
-
-// basic command set
-#define	OLED_CMD_EntireDisplayOnPreserve 			0xA4
-#define	OLED_CMD_EntireDisplayOn 					0xA5
-#define OLED_CMD_SetNotInversedDisplay				0xA6
-#define OLED_CMD_SetInversedDisplay					0xA7
-#define OLED_CMD_SetDisplayON						0xAF
-#define OLED_CMD_SetDisplayOFF						0xAE
-#define OLED_CMD_EnableChargePumpDuringDisplay		0x8D
-
-
-// scrolling command table
-// TODO
-
-
-/* display initialziation */
+/**
+  * @brief initialize SSD1306 driver according to initSequence
+  * @return void
+  */
 void OLED_Init();
 
-/* These are functions for sending configuration commans */
-void OLED_sendCommand(uint8_t command);
 
-void OLED_sendCommandStream(uint8_t stream[], uint8_t streamLength);
-
-/* function to set pointer to specific column of display */
-void OLED_setAddress(uint8_t page, uint8_t column);
-
-/* writes value to column specified by OLED_setAddress() */
-void OLED_writeData(uint8_t data);
-
-/* TODO */
-void OLED_setPixel(uint8_t x, uint8_t y);
-void OLED_clearPixel(uint8_t x, uint8_t y);
-
-/* Clear entire screen */
+/**
+ *  @brief Clear entire screen
+ *  @reval void
+ */
 void OLED_clearScreen();
 
-/* update display with values from displayBUffer */
+
+/**
+ *  @brief Update display with values from buffer.
+ *  @return void
+ */
 void OLED_update();
 
-// display buffer 7 pages of 128 8-bit columns
-//   -> 0 		1 		2 3 4 ... 127
-//  |  [byte]   [byte]  . . .     .
-//  v  [byte]	.		.
-//  0	.				  .
-//  1   .
-//  .
-//  .
-//  7   .
-uint8_t OLED_displayBuffer[OLED_NUM_OF_PAGES][OLED_X_SIZE];
+// ==================================================================================
+// use OLED_update() functions to apply changes made by functions below on display
+// ==================================================================================
+/**
+ *  @brief Print text on display in specified place(buffered)
+ *  @param verse - verse number in range from 0 to OLED_NUM_OF_PAGES
+ *  @param column - column number in range from 0 to OLED_X_SIZE
+ *  @param text - text to be printed
+ */
+void OLED_printText(uint8_t verse, uint8_t column, char * text);
+
+/** TODO
+ * @brief Draw image on display (buffered)
+ * @param verse - verse number of left upper corner in range from 0 to OLED_NUM_OF_PAGES
+ * @param column - column number of left upper corner in range from 0 to LED_X_SIZE
+ * @retval void
+ */
+//void OLED_draw(uint8_t verse, uint8_t column, char * )
+
+/**
+ * @brief draw line on display (buffered)
+ * @param x0 - start point x coordinate in range from 0 to OLED_X_SIZE - 1
+ * @param y0 - start point y coordinate in range from 0 to OLED_Y_SIZE - 1
+ * @param x1 - end point x coordinate in range from 0 to IOLED_X_SIZE - 1
+ * @param y1 - end point y coordinate in range from 0 to OLED_Y_SIZE - 1
+ * @retval void
+ */
+void OLED_drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 
 
+void OLED_setDisplayOn();
 
+void OLED_setDisplayOff();
+
+void OLED_setInversed(uint8_t tf);
 
 #endif

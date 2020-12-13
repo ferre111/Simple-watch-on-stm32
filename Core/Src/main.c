@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "MPU6050.h"
 #include "pressure_sensor.h"
 #include "OLED.h"
 /* USER CODE END Includes */
@@ -46,7 +47,38 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+struct MPU6050_ctx ctx =
+{
+    .sample_rate_div        = 8,
+    .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
+    .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_2000,
+    .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_16,
+    .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN,
+    .master.master_clock_speed = MPU6050_I2C_CLOCK_SPEED_400,
+    .clock_select           = MPU6050_PLL_X_GYRO,
 
+    .master.mult_mst_en            = false,
+    .master.wait_for_es            = true,
+    .master.mst_p_nsr              = false,
+    .i2c_bypass_en                 = false,
+
+//    .slave[0].addr            = PRESSUURE_SENSOR_ADDR,
+//    .slave[0].reg_addr           = 0, //todo
+//    .slave[0].byte_swap       = false,
+//    .slave[0].reg_dis     = false,
+//    .slave[0].group           = false,
+
+    .int_pin.level = true,
+    .int_pin.open = false,
+    .int_pin.latch_en = true,
+    .int_pin.rd_clear = false, //todo
+    .fsync_int_level = false,
+    .fsync_int_en = false,
+
+    .interrupt_en_mask = MPU6050_INT_DATA_RDY_EN | MPU6050_INT_FIFO_OFLOW_EN | MPU6050_INT_MST_EN,
+    .fifo_en    = true,
+    .i2c_mst_en = false,
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,8 +121,11 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
+  MPU6050_deinit();
+  MPU6050_init(&ctx);
   OLED_Init();
   OLED_setDisplayOn();
   /* USER CODE END 2 */
@@ -98,9 +133,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint8_t avr = 100;
-  int32_t temp, pres, init_pres = 0;
+  int64_t temp, pres, init_pres = 0;
   float alt;
   char tmp[20];
+
   for(uint8_t i = 0; i < avr; i++)
   {
       static int32_t tmp_init_pres = 0;
@@ -119,7 +155,7 @@ int main(void)
 
     for(uint8_t i = 0; i < avr; i++)
     {
-        int32_t tmp_pres = 0, tmp_temp = 0;
+        static int32_t tmp_pres = 0, tmp_temp = 0;
 
         pressure_sensor_read_temp_and_pres();
         pressure_sensor_get_temp(&tmp_temp);
@@ -133,9 +169,9 @@ int main(void)
 
     pressure_sensor_calc_dif_alt(init_pres, pres, &alt);
 
-    snprintf(tmp, 20, "Temperature: %d.%dC", temp / 10, temp % 10);
+    snprintf(tmp, 20, "Temperature: %d.%dC", (int32_t)(temp / 10), (int32_t)(temp % 10));
     OLED_printText(0, 0, tmp);
-    snprintf(tmp, 20, "Pressure: %d.%d%dhPa", pres / 100, (pres % 100) / 10, pres % 10);
+    snprintf(tmp, 20, "Pressure: %d.%d%dhPa", (int32_t)(pres / 100), (int32_t)((pres % 100) / 10), (int32_t)(pres % 10));
     OLED_printText(1, 0, tmp);
     snprintf(tmp, 20, "Altitude: %fm", alt);
     OLED_printText(2, 0, tmp);

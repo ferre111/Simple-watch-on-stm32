@@ -7,7 +7,7 @@
 
 #include "pressure_sensor.h"
 
-#define ADDR 0xEE
+#define ADDR PRESSUURE_SENSOR_ADDR
 #define COUNT_OF_CALIB_REG 11
 
 #define I2C_HANDLE hi2c1
