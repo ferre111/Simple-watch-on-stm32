@@ -116,7 +116,7 @@ int main(void)
   uint8_t image1 = 0;
 
 
-  OLED_createTextField(&text1, 2, 0, "derw");
+  OLED_createTextField(&text1, 18, 18, "derw");
 
   OLED_createRectangle(&rect1, 10, 10, 3, 3);
 
@@ -132,9 +132,10 @@ int main(void)
       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
       x++;
       if(x % 2)
-          y--;
-      OLED_textFieldSetText(text1, tmp);
+          y++;
+      //OLED_textFieldSetText(text1, tmp);
       //WHAL_Delay(Delay)
+      OLED_textFieldSetPosition(text1, x % 128, y % 64);
 
       OLED_lineMoveStart(line2, x % 127, 12);
       OLED_lineMoveEnd(line2, 127 - ( y % 128 ) , 55);

@@ -91,7 +91,6 @@ const uint8_t initSequence[33] = {
 
 
 // MACROS
-#define GET_DECPART(x)(x - (int)x)
 //---------------------------------------------------------------------------------------
 /* STATIC VARIABLES */
 /*  display data buffer*/
@@ -106,12 +105,22 @@ const uint8_t initSequence[33] = {
 //  7   .
 
 
+
+// common part of all drawables
+typedef struct
+{
+    uint8_t id;
+    uint8_t x0;
+    uint8_t y0;
+    uint8_t isUsed : 1;
+} drawable_t;
+
 // === TEXT FIELD ===
 typedef struct
 {
     uint8_t             id;
     uint8_t             x0;                                             // upper left corner of text field
-    uint8_t             verse;                                          // verse number of text field
+    uint8_t             y0;                                          // verse number of text field
     char *              text;                                           // pointer to character sequence
                                                                         // If it is different from zero it will be
                                                                         // updated in buffer and decremented so both firstBuffer
@@ -150,6 +159,7 @@ typedef struct
     uint8_t * imageArray;                                               // pointer to array with image representation
     uint8_t isUsed : 1;                                                 // 1 if image is used
 } image_t;
+
 
 typedef struct
 {
@@ -210,7 +220,7 @@ static void setPixel(uint8_t x, uint8_t y)
     *(oled.currentBuffer + x + OLED_X_SIZE*( (uint8_t) (y / 8) )) |= 0x01 << y % 8;
 }
 
-static void printText(uint8_t verse, uint8_t column, char * text)
+/*static void printText(uint8_t verse, uint8_t column, char * text)
 {
     uint8_t i = 0;
     while(text[i] != '\0')
@@ -222,9 +232,37 @@ static void printText(uint8_t verse, uint8_t column, char * text)
         if(verse >= OLED_X_SIZE - 1)
             verse++;
         else
-            //oled.currentBuffer[verse][column++] = 0x00;
-            *(oled.currentBuffer + verse*OLED_X_SIZE + column++) = 0x00;
+            column++;
+        i++;
+    }
+}*/
+static void printText(uint8_t x0, uint8_t y0, char * text)
+{
 
+    if(x0 >= OLED_X_SIZE || (y0 + 8)>= OLED_Y_SIZE)
+        return;
+
+    uint8_t i = 0;
+    uint8_t v = y0 / 8;
+    uint8_t rem = y0 % 8;
+
+    while(text[i] != '\0')
+    {
+        if(rem)
+        {
+            for(uint8_t j = 0; j < 5; j++)
+            {
+                *(oled.currentBuffer + v*OLED_X_SIZE + x0) |= (font_ASCII[text[i] - ' '][j] << rem);
+                *(oled.currentBuffer + (v+1)*OLED_X_SIZE + x0++) |= (font_ASCII[text[i] - ' '][j] >> (8 - rem));
+            }
+            x0++;
+        }
+        else
+        {
+            for(uint8_t j = 0; j < 5; j++)
+                *(oled.currentBuffer + v*OLED_X_SIZE + x0++) = font_ASCII[text[i] - ' '][j];
+            x0++;
+        }
         i++;
     }
 }
@@ -432,7 +470,7 @@ void OLED_update()
     for(uint8_t i = 0; i < OLED_MAX_TEXT_FIELDS_COUNT; i++)
     {
         if( ( oled.textFields[i].isUsed == 1 ))
-            printText(oled.textFields[i].verse, oled.textFields[i].x0, oled.textFields[i].text);
+            printText(oled.textFields[i].x0, oled.textFields[i].y0, oled.textFields[i].text);
     }
     // update lines
     for(uint8_t i = 0; i < OLED_MAX_LINES_COUNT; i++)
@@ -492,7 +530,7 @@ void OLED_setInversed(uint8_t tf)
 
 
 // === TEXT FIELD ===
-void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t verse, char* text)
+void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t y0, char* text)
 {
     uint8_t i = 0;                                               // starting id
     uint8_t c = 0;
@@ -526,7 +564,7 @@ void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t verse, char* text)
     oled.textFields[c].id = i;
     oled.textFields[c].isUsed = 1;
     oled.textFields[c].x0 = x0;
-    oled.textFields[c].verse = verse;
+    oled.textFields[c].y0 = y0;
     oled.textFields[c].text = text;
 }
 
@@ -542,14 +580,14 @@ void OLED_textFieldSetText(uint8_t id, char * text)
     }
 }
 
-void OLED_textFieldSetPosition(uint8_t id, uint8_t x, uint8_t verse)
+void OLED_textFieldSetPosition(uint8_t id, uint8_t x, uint8_t y)
 {
     for(uint8_t i = 0; i < OLED_MAX_TEXT_FIELDS_COUNT; i++)
     {
         if(oled.textFields[i].id == id)
         {
             oled.textFields[i].x0 = x;
-            oled.textFields[i].verse = verse;
+            oled.textFields[i].y0 = y;
             return;
         }
     }
