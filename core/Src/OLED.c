@@ -104,62 +104,65 @@ const uint8_t initSequence[33] = {
 //  .
 //  7   .
 
+typedef enum
+{
+    TEXT_FIELD = 0,
+    LINE,
+    RECTANGLE,
+    IMAGE
+} drawable_e;
 
-
-// common part of all drawables
+// common part of all drawable objects
 typedef struct
 {
-    uint8_t id;
+    drawable_e type;
     uint8_t x0;
     uint8_t y0;
     uint8_t isUsed : 1;
-} drawable_t;
+} drawable_base_t;
 
 // === TEXT FIELD ===
 typedef struct
 {
-    uint8_t             id;
-    uint8_t             x0;                                             // upper left corner of text field
-    uint8_t             y0;                                          // verse number of text field
     char *              text;                                           // pointer to character sequence
                                                                         // If it is different from zero it will be
                                                                         // updated in buffer and decremented so both firstBuffer
                                                                         // and secondBuffer becomes updated.
-    uint8_t             isUsed : 1;                                     // 1 if text field is used
 } textField_t;
 
 // === LINE ===
 typedef struct
 {
-    uint8_t             id;
-    uint8_t             x0;                                              // start point of line x coordinate
-    uint8_t             y0;                                              // start point of line y coordinate
     uint8_t             x1;                                              // end point of line x coordinate
     uint8_t             y1;                                              // end point of line y coordinate
-    uint8_t             isUsed : 1;                                      // 1 if line is used
 } line_t;
 
 // === RECTANGLE ===
 typedef struct
 {
-    uint8_t             id;
-    uint8_t             x0;                                              // upper left corner x coordinate
-    uint8_t             y0;                                              // upper left y coordinate
     uint8_t             width;                                           // rectangle width
     uint8_t             height;                                          // rectangle height
-    uint8_t             isUsed : 1;                                      // 1 if rectangle is used
 } rectangle_t;
 
 // === IMAGE ===
 typedef struct
 {
-    uint8_t id;
-    uint8_t x0;                                                         // upper left corner x coordinate
-    uint8_t y0;                                                         // upper left corner y coordinate
-    uint8_t * imageArray;                                               // pointer to array with image representation
-    uint8_t isUsed : 1;                                                 // 1 if image is used
+    uint8_t * imageArray;                                               // pointer to an array with image representation
 } image_t;
 
+union drawable_specific
+{
+    textField_t                     textField;
+    line_t                          line;
+    rectangle_t                     rectangle;
+    image_t                         image;
+};
+
+typedef struct
+{
+    drawable_base_t common;
+    union drawable_specific spec;
+}drawable_t;
 
 typedef struct
 {
@@ -167,21 +170,16 @@ typedef struct
     uint8_t             secondBufffer[OLED_NUM_OF_PAGES*OLED_X_SIZE];
     uint8_t             addressArray[3];                                 // temp array used to send GRAM address through I2C
     uint8_t *           currentBuffer;                                   // pointer to currently used buffer
-    textField_t         textFields[OLED_MAX_TEXT_FIELDS_COUNT];          // text fields
-    line_t              lines[OLED_MAX_LINES_COUNT];                     // drawable lines
-    rectangle_t         rectangles[OLED_MAX_RECTANGLES_COUNT];           // drawable rectangles
-    image_t             images[OLED_MAX_IMAGES_COUNT];                   // drawable images
+    drawable_t          drawables[OLED_MAX_DRAWABLES_COUNT];             // drrawable objects
     uint8_t             firstBufferAvailable : 1;
-
 } oled_t;
 
 oled_t oled;
-//static uint8_t          buffer[OLED_NUM_OF_PAGES][OLED_X_SIZE];
-//#static uint8_t          addressArray[3];
 
 
 //---------------------------------------------------------------------------------------
 /* STATIC FUNCTIONS */
+
 /*send single command to driver*/
 static void sendCommand(uint8_t command)
 {
@@ -206,13 +204,6 @@ static void setAddress(uint8_t page, uint8_t column)
     //sendCommandStream(addressArray, 3);
 }
 
-/* write data to next column */
-static void writeNextColumn(uint8_t data)
-{
-    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_SINGLE_BYTE,
-            1, &data, 1, HAL_MAX_DELAY);
-}
-
 #define SET_PIXEL(x, y)(*oled.currentBuffer + x + OLED_X_SIZE*((uint8_t)(y / 8) )) |= 0x01 << y % 8;
 
 static void setPixel(uint8_t x, uint8_t y)
@@ -220,22 +211,15 @@ static void setPixel(uint8_t x, uint8_t y)
     *(oled.currentBuffer + x + OLED_X_SIZE*( (uint8_t) (y / 8) )) |= 0x01 << y % 8;
 }
 
-/*static void printText(uint8_t verse, uint8_t column, char * text)
+void clearScreen()
 {
-    uint8_t i = 0;
-    while(text[i] != '\0')
-    {
-        for(uint8_t j = 0; j < 5; j++){
-            *(oled.currentBuffer + verse*OLED_X_SIZE + column++) = font_ASCII[text[i] - ' '][j];
+    for(uint8_t v = 0; v < OLED_NUM_OF_PAGES; v++){
+        for(uint8_t c = 0; c < OLED_X_SIZE; c++){
+            *(oled.currentBuffer + v*OLED_X_SIZE + c) = 0;
         }
-
-        if(verse >= OLED_X_SIZE - 1)
-            verse++;
-        else
-            column++;
-        i++;
     }
-}*/
+}
+
 static void printText(uint8_t x0, uint8_t y0, char * text)
 {
 
@@ -324,7 +308,6 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     {
         for(uint8_t i = 0; i < numOfIterations; i++)
         {
-            //*oled.currentBuffer[ ( uint8_t ) y / 8 ][ ( uint8_t ) x ] |= 1 << ( (uint8_t) y % 8);
             *(oled.currentBuffer + (( uint8_t ) y / 8)*OLED_X_SIZE + ( uint8_t ) x ) |= 1 << ( (uint8_t) y % 8);
             yTemp += tan;
             if(yTemp >= 1)
@@ -333,7 +316,6 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
                     y++;
                 else
                     y--;
-                //yTemp = 0;
                 yTemp = yTemp - (int)yTemp;
             }
 
@@ -344,7 +326,6 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
                     x++;
                 else
                     x--;
-                //Temp = 0;
                 xTemp = xTemp - (int)xTemp;
             }
         }
@@ -352,8 +333,8 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 }
 
 static void drawRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, enum OLED_Color color){
-    uint8_t rem0 = y0 % 8;
-    uint8_t rem1 = y1 % 8;
+    uint8_t rem0 = y0 % 8;  // 6
+    uint8_t rem1 = y1 % 8;  // 1
 
     uint8_t v = y0 / 8;
     uint8_t c = x0;
@@ -393,55 +374,75 @@ static void drawRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, enum OLED_C
         while(c <= x1)
         {
             if(color == WHITE)
-                *(oled.currentBuffer + v*OLED_X_SIZE + c++) |= 0xFF >> ( 8 - rem0 );
+                *(oled.currentBuffer + v*OLED_X_SIZE + c++) |= 0xFF >> ( 8 - rem1 );
             else
                 *(oled.currentBuffer + v*OLED_X_SIZE + c++) &= ~(0xFF >> ( 8 - rem1 ));
         }
     }
 }
 
-static void drawImage(uint8_t xPos, uint8_t yPos,const uint8_t image[])
+static void drawImage(uint8_t x0, uint8_t y0,const uint8_t image[])
 {
-    uint8_t numOfCols = image[0] % OLED_X_SIZE;
-    uint8_t numOfVerses = image[1] % OLED_NUM_OF_PAGES;
+    uint8_t width = image[0], height = image[1];
+    uint8_t x1 = x0 + width - 1;
+    uint8_t y1 = y0 + height - 1;
+    uint8_t rem0 = y0 % 8;  // 6
 
-    uint8_t v;
+    uint8_t v = y0 / 8;
     uint8_t c;
-    uint8_t i = 2;
-    uint8_t rem = yPos % 8;
-    uint8_t startingVerse = yPos / 8;
-    if(rem != 0)
-    {
-        numOfVerses++;
-    }
 
-    for(v = startingVerse; v < startingVerse + numOfVerses; v++)
+    uint16_t i = 2;
+
+    if(rem0 == 0){
+        while(v <= y1 / 8)
+        {
+            c = x0;
+            while(c <= x1)
+            {
+                *(oled.currentBuffer + v*OLED_X_SIZE + c++) |= image[i++];
+            }
+            v++;
+        }
+    }
+    else
     {
-        if(v == startingVerse)
+        c = x0;
+        while(c <= x1)
         {
-            for(c = xPos; c < numOfCols + xPos; c++)
-            {
-                *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i++] << rem;
-            }
+            *(oled.currentBuffer + v*OLED_X_SIZE + c++) |= image[i++];
         }
-        else if (v != startingVerse + numOfVerses - 1 )
+
+        v++;
+        while(v <= y1 / 8)
         {
-            for(c = xPos; c < numOfCols + xPos; c++)
+            c = x0;
+            while(c <= x1)
             {
-                *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i - numOfCols] >> (8 - rem);
-                *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i++] << rem;
+                *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i - width] >> (8 - rem0);
+                if(v != y1 / 8)
+                    *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i] << rem0;
+                i++;
+                c++;
             }
-        }
-        else
-        {
-            for(c = xPos; c < numOfCols + xPos; c++)
-            {
-                *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i++ - numOfCols] >> (8 - rem);
-            }
+            v++;
         }
     }
 }
 
+static void getNextFreeId(uint8_t * id)
+{
+    *id = 0;
+    while(oled.drawables[*id].common.isUsed)
+    {
+        (*id)++;
+        if(*id == OLED_MAX_DRAWABLES_COUNT)   // all drawable slots already used
+        {
+            id = NULL;
+            return;
+        }
+    }
+    return;
+}
 //---------------------------------------------------------------------------------------
 /* API functions */
 
@@ -450,46 +451,47 @@ void OLED_Init()
 {
     uint8_t i = 0;
     oled.currentBuffer = oled.firstBuffer;
-    for(i = 0; i < OLED_MAX_TEXT_FIELDS_COUNT; i++)
+    for(i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
     {
-        oled.textFields[i].isUsed = 0;
+        oled.drawables[i].common.isUsed = 0;
     }
-    for(i = 0; i < OLED_MAX_LINES_COUNT; i++)
-    {
-        oled.lines[i].isUsed = 0;
-    }
+
     sendCommandStream(initSequence, 32);
-    OLED_clearScreen();
+    clearScreen();
     OLED_update();
 }
 
 void OLED_update()
 {
-    OLED_clearScreen();
-    // update text fields
-    for(uint8_t i = 0; i < OLED_MAX_TEXT_FIELDS_COUNT; i++)
+    clearScreen();
+
+    // updata drawable objects on buffer
+    for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
     {
-        if( ( oled.textFields[i].isUsed == 1 ))
-            printText(oled.textFields[i].x0, oled.textFields[i].y0, oled.textFields[i].text);
-    }
-    // update lines
-    for(uint8_t i = 0; i < OLED_MAX_LINES_COUNT; i++)
-    {
-        if( ( oled.lines[i].isUsed == 1 ))
-            drawLine(oled.lines[i].x0, oled.lines[i].y0, oled.lines[i].x1, oled.lines[i].y1);
-    }
-    // update rectangles
-    for(uint8_t i = 0; i < OLED_MAX_RECTANGLES_COUNT; i++)
-    {
-        if( oled.rectangles[i].isUsed == 1 )
-            drawRect(oled.rectangles[i].x0, oled.rectangles[i].y0, oled.rectangles[i].x0 + oled.rectangles[i].width,
-                    oled.rectangles[i].y0 + oled.rectangles[i].height, WHITE);
-    }
-    // update images
-    for(uint8_t i = 0; i < OLED_MAX_IMAGES_COUNT; i++)
-    {
-        if( oled.images[i].isUsed == 1 )
-            drawImage(oled.images[i].x0, oled.images[i].y0, oled.images[i].imageArray);
+        if(oled.drawables[i].common.isUsed)
+        {
+            switch(oled.drawables[i].common.type)
+            {
+            case TEXT_FIELD:
+                printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                          oled.drawables[i].spec.textField.text);
+                break;
+            case LINE:
+                drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                         oled.drawables[i].spec.line.x1, oled.drawables[i].spec.line.y1);
+                break;
+            case RECTANGLE:
+                drawRect(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                        oled.drawables[i].common.x0 + oled.drawables[i].spec.rectangle.width,
+                         oled.drawables[i].common.y0 + oled.drawables[i].spec.rectangle.height,
+                         WHITE);
+                break;
+            case IMAGE:
+                drawImage(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                          oled.drawables[i].spec.image.imageArray);
+                break;
+            }
+        }
     }
 
     // send buffer to OLED
@@ -497,15 +499,6 @@ void OLED_update()
         setAddress(v, 0);
         HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
                 1, (uint8_t * )(oled.currentBuffer + v*OLED_X_SIZE), OLED_X_SIZE, HAL_MAX_DELAY);
-    }
-}
-
-void OLED_clearScreen()
-{
-    for(uint8_t v = 0; v < OLED_NUM_OF_PAGES; v++){
-        for(uint8_t c = 0; c < OLED_X_SIZE; c++){
-            *(oled.currentBuffer + v*OLED_X_SIZE + c) = 0;
-        }
     }
 }
 
@@ -527,252 +520,92 @@ void OLED_setInversed(uint8_t tf)
         sendCommand(OLED_CMD_SetNotInversedDisplay);
 }
 
+void OLED_moveObject(uint8_t id, uint8_t x0, uint8_t y0)
+{
+    oled.drawables[id].common.x0 = x0;
+    oled.drawables[id].common.y0 = y0;
+}
+
+void OLED_deleteObject(uint8_t id)
+{
+    oled.drawables[id].common.isUsed = 0;
+}
 
 
 // === TEXT FIELD ===
 void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t y0, char* text)
 {
-    uint8_t i = 0;                                               // starting id
-    uint8_t c = 0;
+    getNextFreeId(id);
+    if(id == NULL)
+        return;                 // all ids used
 
-    while(oled.textFields[c].isUsed)                    // check which textField is unused
-    {
-        c++;
-        if(c >= OLED_MAX_TEXT_FIELDS_COUNT)
-        {
-            id = NULL;
-            return;
-        }
-    }
-
-    uint8_t temp;
-    do
-    {
-
-        i++;
-        temp = 1;
-        for(uint8_t j = 0; j < OLED_MAX_TEXT_FIELDS_COUNT; j++)                          // loop in all textFields to get unique id
-        {
-            if(oled.textFields[j].id == i)
-            {
-                temp = 0;
-                break;
-            }
-        }
-    } while(temp != 1);                                 // if any of text field have got id == i then increment i and iterate again
-    *id = i;
-    oled.textFields[c].id = i;
-    oled.textFields[c].isUsed = 1;
-    oled.textFields[c].x0 = x0;
-    oled.textFields[c].y0 = y0;
-    oled.textFields[c].text = text;
+    oled.drawables[*id].common.isUsed = 1;
+    oled.drawables[*id].common.type = TEXT_FIELD;
+    oled.drawables[*id].common.x0 = x0;
+    oled.drawables[*id].common.y0 = y0;
+    oled.drawables[*id].spec.textField.text = text;
 }
 
 void OLED_textFieldSetText(uint8_t id, char * text)
 {
-    for(uint8_t i = 0; i < OLED_MAX_TEXT_FIELDS_COUNT; i++)
-    {
-        if(oled.textFields[i].id == id)
-        {
-            oled.textFields[i].text = text;
-            return;
-        }
-    }
-}
-
-void OLED_textFieldSetPosition(uint8_t id, uint8_t x, uint8_t y)
-{
-    for(uint8_t i = 0; i < OLED_MAX_TEXT_FIELDS_COUNT; i++)
-    {
-        if(oled.textFields[i].id == id)
-        {
-            oled.textFields[i].x0 = x;
-            oled.textFields[i].y0 = y;
-            return;
-        }
-    }
+    oled.drawables[id].spec.textField.text = text;
 }
 
 // === LINE ===
 void OLED_createLine(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
-    uint8_t i = 0;                                               // starting id
-    uint8_t c = 0;
+    getNextFreeId(id);
+    if(id == NULL)
+        return;                 // all ids used
 
-    while(oled.lines[c].isUsed)                    // check which line is unused
-    {
-        c++;
-        if(c >= OLED_MAX_LINES_COUNT)
-        {
-            id = NULL;
-            return;
-        }
-    }
-
-    uint8_t temp;
-    do
-    {
-
-        i++;
-        temp = 1;
-        for(uint8_t j = 0; j < OLED_MAX_LINES_COUNT; j++)                          // loop in all lines to get unique id
-        {
-            if(oled.lines[j].id == i)
-            {
-                temp = 0;
-                break;
-            }
-        }
-    } while(temp != 1);                                 // if any line have got id == i then increment i and iterate again
-    *id = i;
-    oled.lines[c].id = i;
-    oled.lines[c].isUsed = 1;
-    oled.lines[c].x0 = x0;
-    oled.lines[c].y0 = y0;
-    oled.lines[c].x1 = x1;
-    oled.lines[c].y1 = y1;
+    oled.drawables[*id].common.isUsed = 1;
+    oled.drawables[*id].common.type = LINE;
+    oled.drawables[*id].common.x0 = x0;
+    oled.drawables[*id].common.y0 = y0;
+    oled.drawables[*id].spec.line.x1 = x1;
+    oled.drawables[*id].spec.line.y1 = y1;
 }
 
-void OLED_lineMoveStart(uint8_t id, uint8_t x0, uint8_t y0)
-{
-    for(uint8_t i = 0; i < OLED_MAX_LINES_COUNT; i++)
-    {
-        if(oled.lines[i].id == id)
-        {
-            oled.lines[i].x0 = x0;
-            oled.lines[i].y0 = y0;
-            return;
-        }
-    }
-}
 
 void OLED_lineMoveEnd(uint8_t id, uint8_t x1, uint8_t y1)
 {
-    for(uint8_t i = 0; i < OLED_MAX_LINES_COUNT; i++)
-    {
-        if(oled.lines[i].id == id)
-        {
-            oled.lines[i].x1 = x1;
-            oled.lines[i].y1 = y1;
-            return;
-        }
-    }
+    oled.drawables[id].spec.line.x1 = x1;
+    oled.drawables[id].spec.line.y1 = y1;
 }
 
 // === RECTANGLE ===
 void OLED_createRectangle(uint8_t * id,  uint8_t x0, uint8_t y0, uint8_t width, uint8_t height)
 {
-    uint8_t i = 0;                                               // starting id
-    uint8_t c = 0;
+    getNextFreeId(id);
+    if(id == NULL)
+        return;                 // all ids used
 
-    while(oled.rectangles[c].isUsed)                    // check which rectangle is unused
-    {
-        c++;
-        if(c >= OLED_MAX_RECTANGLES_COUNT)
-        {
-            id = NULL;
-            return;
-        }
-    }
-
-    uint8_t temp;
-    do
-    {
-
-        i++;
-        temp = 1;
-        for(uint8_t j = 0; j < OLED_MAX_RECTANGLES_COUNT; j++)                          // loop in all rectangels to get unique id
-        {
-            if(oled.rectangles[j].id == i)
-            {
-                temp = 0;
-                break;
-            }
-        }
-    } while(temp != 1);                                 // if any of rectangle have got id == i then increment i and iterate again
-    *id = i;
-    oled.rectangles[c].id = i;
-    oled.rectangles[c].isUsed = 1;
-    oled.rectangles[c].x0 = x0;
-    oled.rectangles[c].y0 = y0;
-    oled.rectangles[c].width = width;
-    oled.rectangles[c].height = height;
-}
-
-void OLED_rectangleSetPosition(uint8_t id, uint8_t x0, uint8_t y0)
-{
-    for(uint8_t i = 0; i < OLED_MAX_RECTANGLES_COUNT; i++)
-    {
-        if(oled.rectangles[i].id == id)
-        {
-            oled.rectangles[i].x0 = x0;
-            oled.rectangles[i].y0 = y0;
-            return;
-        }
-    }
+    oled.drawables[*id].common.isUsed = 1;
+    oled.drawables[*id].common.type = RECTANGLE;
+    oled.drawables[*id].common.x0 = x0;
+    oled.drawables[*id].common.y0 = y0;
+    oled.drawables[*id].spec.rectangle.width = width;
+    oled.drawables[*id].spec.rectangle.height = height;
 }
 
 void OLED_rectangleSetDimensions(uint8_t id, uint8_t width, uint8_t height)
 {
-    for(uint8_t i = 0; i < OLED_MAX_RECTANGLES_COUNT; i++)
-    {
-        if(oled.rectangles[i].id == id)
-        {
-            oled.rectangles[i].width = width;
-            oled.rectangles[i].height = height;
-            return;
-        }
-    }
+    oled.drawables[id].spec.rectangle.width = width;
+    oled.drawables[id].spec.rectangle.height = height;
 }
 
 // === IMAGE ===
 void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t * imageArray)
 {
-    uint8_t i = 0;                                               // starting id
-    uint8_t c = 0;
+    getNextFreeId(id);
+    if(id == NULL)
+        return;                 // all ids used
 
-    while(oled.images[c].isUsed)                    // check which rectangle is unused
-    {
-        c++;
-        if(c >= OLED_MAX_IMAGES_COUNT)
-        {
-            id = NULL;
-            return;
-        }
-    }
-
-    uint8_t temp;
-    do
-    {
-
-        i++;
-        temp = 1;
-        for(uint8_t j = 0; j < OLED_MAX_IMAGES_COUNT; j++)                          // loop in all rectangels to get unique id
-        {
-            if(oled.images[j].id == i)
-            {
-                temp = 0;
-                break;
-            }
-        }
-    } while(temp != 1);                                 // if any of rectangle have got id == i then increment i and iterate again
-    *id = i;
-    oled.images[c].id = i;
-    oled.images[c].isUsed = 1;
-    oled.images[c].x0 = x0;
-    oled.images[c].y0 = y0;
-    oled.images[c].imageArray = imageArray;
+    oled.drawables[*id].common.isUsed = 1;
+    oled.drawables[*id].common.type = IMAGE;
+    oled.drawables[*id].common.x0 = x0;
+    oled.drawables[*id].common.y0 = y0;
+    oled.drawables[*id].spec.image.imageArray = imageArray;
 }
 
-void OLED_imageMove(uint8_t id, uint8_t x0, uint8_t y0)
-{
-    for(uint8_t i = 0; i < OLED_MAX_IMAGES_COUNT; i++)
-    {
-        if(oled.images[i].id == id)
-        {
-            oled.images[i].x0 = x0;
-            oled.images[i].y0 = y0;
-            return;
-        }
-    }
-}
+

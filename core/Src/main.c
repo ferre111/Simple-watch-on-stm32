@@ -108,21 +108,20 @@ int main(void)
   OLED_Init();
   OLED_setDisplayOn();
 
-  char tmp[20];
+  char tmp[20] = "raz dwa";
 
   uint8_t text1 = 0;
   uint8_t line2 = 0;
   uint8_t rect1 = 0;
   uint8_t image1 = 0;
 
+  OLED_createTextField(&text1, 18, 18, tmp);
 
-  OLED_createTextField(&text1, 18, 18, "derw");
+  OLED_createRectangle(&rect1, 10, 14, 3, 3);
 
-  OLED_createRectangle(&rect1, 10, 10, 3, 3);
+  OLED_createImage(&image1, 40, 0, imageOne);
 
-  OLED_createImage(&image1, 20, 10, imageOne);
-
-  OLED_createLine(&line2, 1, 31, 127, 45);
+  //OLED_createLine(&line2, 70, 31, 100, 45);
 
   uint8_t x, y = 0;
   while (1)
@@ -133,13 +132,16 @@ int main(void)
       x++;
       if(x % 2)
           y++;
-      //OLED_textFieldSetText(text1, tmp);
-      //WHAL_Delay(Delay)
-      OLED_textFieldSetPosition(text1, x % 128, y % 64);
 
-      OLED_lineMoveStart(line2, x % 127, 12);
-      OLED_lineMoveEnd(line2, 127 - ( y % 128 ) , 55);
+      x = x % 127;
+      y = y % 63;
 
+      if(x == 126)
+          OLED_deleteObject(text1);
+//      OLED_moveObject(text1, x, y);
+      //OLED_moveObject(rect1, x, y);
+      OLED_moveObject(image1, 40, y);
+//      OLED_moveObject(line2, x, y);
       OLED_update();
 
 

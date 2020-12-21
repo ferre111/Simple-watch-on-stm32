@@ -22,14 +22,10 @@
 #define OLED_NUM_OF_PAGES                           8
 
 // modify these according to the maximum count of objects used simultaneously to save RAM
-#define OLED_MAX_TEXT_FIELDS_COUNT              10
-#define OLED_MAX_LINES_COUNT                    10
-#define OLED_MAX_RECTANGLES_COUNT               10
-#define OLED_MAX_IMAGES_COUNT                   10
+#define OLED_MAX_DRAWABLES_COUNT                    40
 
 #define OLED_TRUE                                   1
 #define OLED_FALSE                                  0
-
 
 enum OLED_Color
 {
@@ -52,21 +48,31 @@ void OLED_Init();
  */
 void OLED_update();
 
-/**
- *  @brief Clear entire screen
- *  @reval void
- */
-void OLED_clearScreen();
-
 void OLED_setDisplayOn();
 
 void OLED_setDisplayOff();
 
 void OLED_setInversed(uint8_t tf);
 
+/**
+ * @brief set object position
+ * @param id - object id
+ * @param x0 - new x coordinate
+ * @param y0 - new y coordniate
+ * @retval none
+ */
+void OLED_moveObject(uint8_t id, uint8_t x0, uint8_t y0);
+
+/**
+ * @brief delete object
+ * @param id - object id
+ * @retval none
+ */
+void OLED_deleteObject(uint8_t id);
 
 
 // === TEXT FIELD ===
+
 /*
  * @brief create a text field
  * @param id - pointer to variable where textField id will be stored
@@ -84,21 +90,9 @@ void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t verse, char * text);
  */
 void OLED_textFieldSetText(uint8_t id, char * text);
 
-/*
- * @brief set text field position
- * @param x - column number of left side of text
- * @param verse - verse of text field ( 0 to OLED_NUM_OF_VERSES - 1 )
- * @retval void
- */
-void OLED_textFieldSetPosition(uint8_t id, uint8_t x, uint8_t verse);
-
-/*
- * @brief delete text field
- * @param id - text field id
- */
-//void OLED_textFieldDelete(uint8_t * id )
 
 // === LINE ===
+
 /*
  * @brief create a lines
  * @param id - pointer to variable where the line id will be stored
@@ -110,15 +104,6 @@ void OLED_textFieldSetPosition(uint8_t id, uint8_t x, uint8_t verse);
 void OLED_createLine(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 
 /*
- * @brief move start point of line
- * @param id - line id
- * @param x0 - x coordinate
- * @param y0 - y coordinate
- * @retval void
- */
-void OLED_lineMoveStart(uint8_t id, uint8_t x0, uint8_t y0);
-
-/*
  * @brief move end point of line
  * @param id - line id
  * @param x1 - x coordinate
@@ -127,7 +112,9 @@ void OLED_lineMoveStart(uint8_t id, uint8_t x0, uint8_t y0);
  */
 void OLED_lineMoveEnd(uint8_t id, uint8_t x1, uint8_t y1);
 
+
 // === RECTANGLE ===
+
 /*
  * @brief create a rectangle
  * @param id - pointer to variable where the rectangle id will be stored
@@ -141,14 +128,6 @@ void OLED_lineMoveEnd(uint8_t id, uint8_t x1, uint8_t y1);
 void OLED_createRectangle(uint8_t * id,  uint8_t x0, uint8_t y0, uint8_t width, uint8_t height);
 
 /*
- * @brief set rectangle position
- * @param id - rectangle id
- * @param x0 - upper left corner x coordinate
- * @param y0 - upper left corner y coordinate
- */
-void OLED_rectangleSetPosition(uint8_t id, uint8_t x0, uint8_t y0);
-
-/*
  * @brief set rectangle dimensions
  * @oaram d - rectangle id
  * @param width
@@ -156,6 +135,7 @@ void OLED_rectangleSetPosition(uint8_t id, uint8_t x0, uint8_t y0);
  * @retval void
  */
 void OLED_rectangleSetDimensions(uint8_t id, uint8_t width, uint8_t height);
+
 
 // === IMAGE ===
 
@@ -171,12 +151,5 @@ void OLED_rectangleSetDimensions(uint8_t id, uint8_t width, uint8_t height);
  */
 void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t * imageArray);
 
-/*
- * @brief move image
- * @param id - iamge id
- * @param x0 - upper left corner x coordinate
- * @param y0 - upper left corner y coordinate
- * @retval void
- */
-void OLED_imageMove(uint8_t id, uint8_t x0, uint8_t y0);
+
 #endif
