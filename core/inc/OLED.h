@@ -78,9 +78,10 @@ void OLED_deleteObject(uint8_t id);
  * @param id - pointer to variable where textField id will be stored
  * @param x0 - x coordinate of left side of the text field
  * @param verse - verse of text (0 to OLED_NUM_OF_VERSES)
+ * @pram fontSize - font size (in range 1 to 4)
  * @retval void
  */
-void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t verse, char * text);
+void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t verse, char * text, uint8_t fontSize);
 
 /*
  * @brief set text of given textField

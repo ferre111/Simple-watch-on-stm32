@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "rtc.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -91,6 +92,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C2_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
 /*
@@ -108,18 +110,26 @@ int main(void)
   OLED_Init();
   OLED_setDisplayOn();
 
-  char tmp[20] = "raz dwa";
+  char tmp[20] = "d";
 
-  uint8_t text1 = 0;
+  uint8_t timeTextField = 0;
+  RTC_TimeTypeDef time_s;
+  char timeText[8];
+
+  uint8_t dateTextField = 0;
+  RTC_DateTypeDef date_s;
+  char dateText[8];
+
   uint8_t line2 = 0;
   uint8_t rect1 = 0;
   uint8_t image1 = 0;
 
-  OLED_createTextField(&text1, 18, 18, tmp);
+  OLED_createTextField(&timeTextField, 15, 24, timeText, 2);
+  OLED_createTextField(&dateTextField, 38, 8, dateText, 1);
 
-  OLED_createRectangle(&rect1, 10, 14, 3, 3);
+  //OLED_createRectangle(&rect1, 10, 14, 3, 3);
 
-  OLED_createImage(&image1, 40, 0, imageOne);
+  //OLED_createImage(&image1, 40, 0, imageOne);
 
   //OLED_createLine(&line2, 70, 31, 100, 45);
 
@@ -129,22 +139,16 @@ int main(void)
 
       //HAL_Delay(20);
       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-      x++;
-      if(x % 2)
-          y++;
 
-      x = x % 127;
-      y = y % 63;
+      HAL_RTC_GetTime(&hrtc, &time_s, RTC_FORMAT_BIN);
+      sprintf(timeText, "%02d:%02d:%02d", time_s.Hours, time_s.Minutes, time_s.Seconds);
 
-      if(x == 126)
-          OLED_deleteObject(text1);
-//      OLED_moveObject(text1, x, y);
-      //OLED_moveObject(rect1, x, y);
-      OLED_moveObject(image1, 40, y);
-//      OLED_moveObject(line2, x, y);
+      HAL_RTC_GetDate(&hrtc, &date_s, RTC_FORMAT_BIN);
+      sprintf(dateText, "%02d/%02d/%02d", date_s.Date, date_s.Month, date_s.Year);
+
+
       OLED_update();
-
-
+      HAL_Delay(100);
 
     /* USER CODE END WHILE */
 
@@ -161,14 +165,16 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -186,6 +192,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }

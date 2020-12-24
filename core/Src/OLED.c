@@ -128,6 +128,7 @@ typedef struct
                                                                         // If it is different from zero it will be
                                                                         // updated in buffer and decremented so both firstBuffer
                                                                         // and secondBuffer becomes updated.
+    uint8_t size;
 } textField_t;
 
 // === LINE ===
@@ -220,7 +221,7 @@ void clearScreen()
     }
 }
 
-static void printText(uint8_t x0, uint8_t y0, char * text)
+static void printText(uint8_t x0, uint8_t y0, char * text, uint8_t size)
 {
 
     if(x0 >= OLED_X_SIZE || (y0 + 8)>= OLED_Y_SIZE)
@@ -229,26 +230,51 @@ static void printText(uint8_t x0, uint8_t y0, char * text)
     uint8_t i = 0;
     uint8_t v = y0 / 8;
     uint8_t rem = y0 % 8;
+    uint8_t y = y0;
 
     while(text[i] != '\0')
     {
-        if(rem)
+        if(size == 1)
         {
-            for(uint8_t j = 0; j < 5; j++)
+            if(rem)
             {
-                *(oled.currentBuffer + v*OLED_X_SIZE + x0) |= (font_ASCII[text[i] - ' '][j] << rem);
-                *(oled.currentBuffer + (v+1)*OLED_X_SIZE + x0++) |= (font_ASCII[text[i] - ' '][j] >> (8 - rem));
+                for(uint8_t j = 0; j < 5; j++)
+                {
+                    *(oled.currentBuffer + v*OLED_X_SIZE + x0) |= (font_ASCII[text[i] - ' '][j] << rem);
+                    *(oled.currentBuffer + (v+1)*OLED_X_SIZE + x0++) |= (font_ASCII[text[i] - ' '][j] >> (8 - rem));
+                }
+                x0++;
             }
-            x0++;
-        }
-        else
+            else
+            {
+                for(uint8_t j = 0; j < 5; j++)
+                    *(oled.currentBuffer + v*OLED_X_SIZE + x0++) = font_ASCII[text[i] - ' '][j];
+                x0++;
+            }
+            i++;
+        }  else if(size > 1)
         {
-            for(uint8_t j = 0; j < 5; j++)
-                *(oled.currentBuffer + v*OLED_X_SIZE + x0++) = font_ASCII[text[i] - ' '][j];
-            x0++;
+            for(uint8_t j = 0; j < 5*size; j++)
+            {
+                for(uint8_t k = 0; k < 8; k++)
+                {
+                    for(uint8_t l = 0; l < size; l++)
+                    {
+                        if(font_ASCII[text[i] - ' '][j/size] & (0x01 << k))
+                        {
+                            setPixel(x0, y);
+                        }
+                        y++;
+                    }
+                }
+                y = y0;
+                x0++;
+            }
+            i++;
+            x0 += size;
         }
-        i++;
     }
+
 }
 
 static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
@@ -474,7 +500,7 @@ void OLED_update()
             {
             case TEXT_FIELD:
                 printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                          oled.drawables[i].spec.textField.text);
+                          oled.drawables[i].spec.textField.text, oled.drawables[i].spec.textField.size);
                 break;
             case LINE:
                 drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
@@ -533,7 +559,7 @@ void OLED_deleteObject(uint8_t id)
 
 
 // === TEXT FIELD ===
-void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t y0, char* text)
+void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t y0, char* text, uint8_t fontSize)
 {
     getNextFreeId(id);
     if(id == NULL)
@@ -544,6 +570,11 @@ void OLED_createTextField(uint8_t * id, uint8_t x0, uint8_t y0, char* text)
     oled.drawables[*id].common.x0 = x0;
     oled.drawables[*id].common.y0 = y0;
     oled.drawables[*id].spec.textField.text = text;
+    if(fontSize == 0)
+        fontSize = 1;
+    else
+        fontSize = fontSize % 5;
+    oled.drawables[*id].spec.textField.size = fontSize;
 }
 
 void OLED_textFieldSetText(uint8_t id, char * text)
