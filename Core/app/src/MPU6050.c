@@ -113,7 +113,8 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
 
     aux_tab[1] = ctx.clock_select;
     HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[1], 1, I2C_TIMEOUT); //turn on device, select clk
-
+//    //todo
+//    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[2], 1, I2C_TIMEOUT);
     aux_tab[1] = ctx.sample_rate_div - 1;
     HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, SMPLRT_DIV, 1, &aux_tab[1], 1, I2C_TIMEOUT);   //set sample rate divider
 
@@ -224,6 +225,7 @@ static void read_data(void)
     HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTL, 1, (uint8_t*)&size, 1, I2C_TIMEOUT);
     uint32_t time = HAL_GetTick() - tick;
     __NOP();
+    //założenia, rozpoznawanie gestów dodatkowo,
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)

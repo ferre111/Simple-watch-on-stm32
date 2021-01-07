@@ -121,11 +121,14 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
+  uint8_t usun;
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
+  HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
   MPU6050_deinit();
+  HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
   MPU6050_init(&ctx);
+  HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
   OLED_Init();
   OLED_setDisplayOn();
   /* USER CODE END 2 */
