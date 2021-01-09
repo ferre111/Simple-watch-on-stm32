@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "i2c.h"
 #include "rtc.h"
 #include "gpio.h"
@@ -27,7 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "OLED.h"
 #include "images.h"
-#include "pressure_sensor.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+    uint16_t fps = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,8 +92,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C2_Init();
+  MX_DMA_Init();
   MX_RTC_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
 /*
@@ -107,7 +109,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  //myI2C_Init();
+
   OLED_Init();
+
   OLED_setDisplayOn();
 
   char tmp[20] = "d";
@@ -120,25 +125,29 @@ int main(void)
   RTC_DateTypeDef date_s;
   char dateText[8];
 
+  uint8_t fpsTextField = 0;
+  char fpsText[8];
+
+  uint8_t oldTime = 0;
+
   uint8_t line2 = 0;
-  uint8_t rect1 = 0;
-  uint8_t image1 = 0;
 
   OLED_createTextField(&timeTextField, 15, 24, timeText, 2);
   OLED_createTextField(&dateTextField, 38, 8, dateText, 1);
+  OLED_createTextField(&fpsTextField, 100, 0, fpsText, 1);
 
-  //OLED_createRectangle(&rect1, 10, 14, 3, 3);
+  OLED_createLine(&line2, 70, 31, 100, 45);
 
-  //OLED_createImage(&image1, 40, 0, imageOne);
+  OLED_setDisplayOn();
 
-  //OLED_createLine(&line2, 70, 31, 100, 45);
 
-  uint8_t x, y = 0;
+
+  uint8_t x, y, jj = 0;
   while (1)
   {
 
-      //HAL_Delay(20);
-      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      HAL_Delay(20);
+      HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
 
       HAL_RTC_GetTime(&hrtc, &time_s, RTC_FORMAT_BIN);
       sprintf(timeText, "%02d:%02d:%02d", time_s.Hours, time_s.Minutes, time_s.Seconds);
@@ -147,8 +156,15 @@ int main(void)
       sprintf(dateText, "%02d/%02d/%02d", date_s.Date, date_s.Month, date_s.Year);
 
 
+      OLED_lineMoveEnd(line2, x, y);
       OLED_update();
-      HAL_Delay(100);
+      if(time_s.Seconds != oldTime)
+      {
+          oldTime = time_s.Seconds;
+          sprintf(fpsText, "%2d", fps);
+          fps = 0;
+      }
+
 
     /* USER CODE END WHILE */
 
@@ -204,6 +220,12 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+    fps++;
+}
+
 
 /* USER CODE END 4 */
 

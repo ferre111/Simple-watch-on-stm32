@@ -6,6 +6,7 @@
  */
 #include "OLED.h"
 #include "i2c.h"
+//#include "myI2C.h"
 #include "ascii_font.h"
 
 //---------------------------------------------------------------------------------------
@@ -35,9 +36,20 @@
 
 const uint8_t initSequence[33] = {
         OLED_CMD_SetDisplayOFF,
+//        0x20,                   // set memory addressing mode
+//        0x02,                   // page addressing
+//        //0x01,                 // vertical increment
+//
+//        0x22,                   // set page addressing
+//        0x00,                   // start
+//        OLED_NUM_OF_PAGES - 1,  // stop
+//
+//        0x21,                   // set column addressing
+//        0x00,                   // start
+//        OLED_X_SIZE - 1,        // stop
+
         0x20,                   // set memory addressing mode
-        0x02,                   // page addressing
-        //0x01,                 // vertical increment
+        0x00,                   // horizontal addressing mode
 
         0x22,                   // set page addressing
         0x00,                   // start
@@ -46,6 +58,9 @@ const uint8_t initSequence[33] = {
         0x21,                   // set column addressing
         0x00,                   // start
         OLED_X_SIZE - 1,        // stop
+
+
+
 
         0xB0,                   // set initial page 0
 
@@ -184,6 +199,10 @@ oled_t oled;
 /*send single command to driver*/
 static void sendCommand(uint8_t command)
 {
+    // wait until end of display buffer transmission
+    while(__HAL_I2C_GET_FLAG(&hi2c2, I2C_FLAG_BUSY)){
+        __NOP();
+    }
     HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
 }
 
@@ -202,7 +221,6 @@ static void setAddress(uint8_t page, uint8_t column)
 
     HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, 1,
             oled.addressArray, 3, HAL_MAX_DELAY);
-    //sendCommandStream(addressArray, 3);
 }
 
 #define SET_PIXEL(x, y)(*oled.currentBuffer + x + OLED_X_SIZE*((uint8_t)(y / 8) )) |= 0x01 << y % 8;
@@ -489,42 +507,54 @@ void OLED_Init()
 
 void OLED_update()
 {
-    clearScreen();
-
-    // updata drawable objects on buffer
-    for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
+    if(__HAL_I2C_GET_FLAG(&OLED_I2C_HANDLE, I2C_FLAG_BUSY))
     {
-        if(oled.drawables[i].common.isUsed)
+        __NOP();
+    } else
+    {
+        setAddress(0 , 0);
+            HAL_I2C_Mem_Write_DMA(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
+            1, (uint8_t * )(oled.currentBuffer), 1024);
+
+        // swap buffers
+        if(oled.currentBuffer == oled.firstBuffer)
         {
-            switch(oled.drawables[i].common.type)
+            oled.currentBuffer = oled.secondBufffer;
+        } else
+        {
+            oled.currentBuffer = oled.firstBuffer;
+        }
+
+        // update new buffer
+        clearScreen();
+        // updata drawable objects on buffer
+        for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
+        {
+            if(oled.drawables[i].common.isUsed)
             {
-            case TEXT_FIELD:
-                printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                          oled.drawables[i].spec.textField.text, oled.drawables[i].spec.textField.size);
-                break;
-            case LINE:
-                drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                         oled.drawables[i].spec.line.x1, oled.drawables[i].spec.line.y1);
-                break;
-            case RECTANGLE:
-                drawRect(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                        oled.drawables[i].common.x0 + oled.drawables[i].spec.rectangle.width,
-                         oled.drawables[i].common.y0 + oled.drawables[i].spec.rectangle.height,
-                         WHITE);
-                break;
-            case IMAGE:
-                drawImage(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                          oled.drawables[i].spec.image.imageArray);
-                break;
+                switch(oled.drawables[i].common.type)
+                {
+                case TEXT_FIELD:
+                    printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                              oled.drawables[i].spec.textField.text, oled.drawables[i].spec.textField.size);
+                    break;
+                case LINE:
+                    drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                             oled.drawables[i].spec.line.x1, oled.drawables[i].spec.line.y1);
+                    break;
+                case RECTANGLE:
+                    drawRect(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                            oled.drawables[i].common.x0 + oled.drawables[i].spec.rectangle.width,
+                             oled.drawables[i].common.y0 + oled.drawables[i].spec.rectangle.height,
+                             WHITE);
+                    break;
+                case IMAGE:
+                    drawImage(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                              oled.drawables[i].spec.image.imageArray);
+                    break;
+                }
             }
         }
-    }
-
-    // send buffer to OLED
-    for(uint8_t v = 0; v < OLED_NUM_OF_PAGES; v++){
-        setAddress(v, 0);
-        HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
-                1, (uint8_t * )(oled.currentBuffer + v*OLED_X_SIZE), OLED_X_SIZE, HAL_MAX_DELAY);
     }
 }
 
@@ -600,6 +630,10 @@ void OLED_createLine(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
 
 void OLED_lineMoveEnd(uint8_t id, uint8_t x1, uint8_t y1)
 {
+    if(x1 >= OLED_X_SIZE)
+        x1 = OLED_X_SIZE - 1;
+    if(y1 >= OLED_Y_SIZE)
+        y1 = OLED_Y_SIZE - 1;
     oled.drawables[id].spec.line.x1 = x1;
     oled.drawables[id].spec.line.y1 = y1;
 }

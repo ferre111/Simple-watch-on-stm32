@@ -6,17 +6,28 @@
  *
  *      This is library for SSD1306 based OLED with I2C interface.
  *      To use this you have to specify I2C module ?where?
+ *
+ *
+ *      rendering procedure description
+ *
+ *      1. User create drawable objects using one of OLED_create... function.
+ *      2. In main loop the OLED_update() function must is called at every iteration
+ *      3a. If transmission of previous buffer is ongoing, do nothing
+ *      3b. Else if previous transmission is finished, DMA transmission of buffer updated at previous function call is started.
+ *           Then buffers are swaped and the new content based on drawable objects properties is written into a buffer
+ *            which will be sent to OLED at next function call.
+ *      4. User can modify drawable object properties using their IDs outside of the update() function.
  */
 
 #include "stm32f1xx.h"
-#include "stm32f1xx_hal_i2c.h"
+//#include "stm32f1xx_hal_i2c.h"
 
 #ifndef OLED_H_
 #define OLED_H_
 
 // * DEFINES TO BE MODIFIED BY USER */
 #define OLED_I2C_HANDLE hi2c2
-
+//#define OLED_I2C                                    I2C2
 #define OLED_X_SIZE                                 128
 #define OLED_Y_SIZE                                 64
 #define OLED_NUM_OF_PAGES                           8
