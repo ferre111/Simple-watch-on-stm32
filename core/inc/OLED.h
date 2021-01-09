@@ -27,7 +27,7 @@
 
 // * DEFINES TO BE MODIFIED BY USER */
 #define OLED_I2C_HANDLE hi2c2
-//#define OLED_I2C                                    I2C2
+#define OLED_I2C                                    I2C2
 #define OLED_X_SIZE                                 128
 #define OLED_Y_SIZE                                 64
 #define OLED_NUM_OF_PAGES                           8
@@ -43,6 +43,8 @@ enum OLED_Color
     WHITE,
     BLACK
 };
+
+//I2C_TypeDef OLED_I2C = I2C2;
 
 
 /* API FUNCTIONS */

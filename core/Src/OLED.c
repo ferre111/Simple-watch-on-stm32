@@ -5,8 +5,7 @@
  *      Author: Wiktor Lechowicz
  */
 #include "OLED.h"
-#include "i2c.h"
-//#include "myI2C.h"
+#include "myI2C.h"
 #include "ascii_font.h"
 
 //---------------------------------------------------------------------------------------
@@ -200,16 +199,20 @@ oled_t oled;
 static void sendCommand(uint8_t command)
 {
     // wait until end of display buffer transmission
-    while(__HAL_I2C_GET_FLAG(&hi2c2, I2C_FLAG_BUSY)){
-        __NOP();
-    }
-    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
+//    while(__HAL_I2C_GET_FLAG(&hi2c2, I2C_FLAG_BUSY)){
+//        __NOP();
+//    }
+//    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
+
+    myI2C_writeByte(OLED_I2C, OLED_ADDRESS, 0x00, command);
 }
 
 /* send stream of commands to driver */
 static void sendCommandStream(const uint8_t stream[], uint8_t streamLength)
 {
-    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x01, 1, stream, streamLength, HAL_MAX_DELAY);
+    //HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x01, 1, stream, streamLength, HAL_MAX_DELAY);
+
+    myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, 0x01, stream, streamLength);
 }
 
 /* set next column pointer in display driver */
@@ -219,8 +222,10 @@ static void setAddress(uint8_t page, uint8_t column)
     oled.addressArray[1] = column & 0x0F;
     oled.addressArray[2] = 0x10 | ((0xF0 & column) >> 4);
 
-    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, 1,
-            oled.addressArray, 3, HAL_MAX_DELAY);
+//    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, 1,
+//            oled.addressArray, 3, HAL_MAX_DELAY);
+
+    myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, oled.addressArray, 3);
 }
 
 #define SET_PIXEL(x, y)(*oled.currentBuffer + x + OLED_X_SIZE*((uint8_t)(y / 8) )) |= 0x01 << y % 8;
@@ -507,14 +512,17 @@ void OLED_Init()
 
 void OLED_update()
 {
-    if(__HAL_I2C_GET_FLAG(&OLED_I2C_HANDLE, I2C_FLAG_BUSY))
+    if(OLED_I2C->SR2 & I2C_SR2_BUSY)
     {
         __NOP();
     } else
     {
         setAddress(0 , 0);
-            HAL_I2C_Mem_Write_DMA(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
-            1, (uint8_t * )(oled.currentBuffer), 1024);
+//            HAL_I2C_Mem_Write_DMA(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
+//            1, (uint8_t * )(oled.currentBuffer), 1024);
+
+        myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
+                (uint8_t * )(oled.currentBuffer), 1024);
 
         // swap buffers
         if(oled.currentBuffer == oled.firstBuffer)

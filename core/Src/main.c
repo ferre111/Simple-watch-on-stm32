@@ -19,8 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dma.h"
-#include "i2c.h"
 #include "rtc.h"
 #include "gpio.h"
 
@@ -28,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "OLED.h"
 #include "images.h"
+#include "myI2C.h"
 
 /* USER CODE END Includes */
 
@@ -92,10 +91,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_RTC_Init();
-  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
+  myI2C_Init();
 
 /*
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
@@ -108,8 +106,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  //myI2C_Init();
 
   OLED_Init();
 
@@ -137,10 +133,6 @@ int main(void)
   OLED_createTextField(&fpsTextField, 100, 0, fpsText, 1);
 
   OLED_createLine(&line2, 70, 31, 100, 45);
-
-  OLED_setDisplayOn();
-
-
 
   uint8_t x, y, jj = 0;
   while (1)
@@ -220,11 +212,11 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
-    fps++;
-}
+//void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
+//{
+//    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+//    fps++;
+//}
 
 
 /* USER CODE END 4 */
