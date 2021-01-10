@@ -198,6 +198,19 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /* USER CODE BEGIN 1 */
+void DMA1_Channel4_IRQHandler(void)
+{
+    if(DMA1->ISR & DMA_ISR_TCIF4)
+    {
+        // disable DMA1 CH4 TC interrupt
+        DMA1_Channel4->CCR &= ~DMA_CCR_TCIE;
 
+        // clear TCI flag
+        DMA1->IFCR |= DMA_IFCR_CTCIF4;
+
+        // set I2C2 stop condition
+        I2C2->CR1 |= I2C_CR1_STOP;
+    }
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

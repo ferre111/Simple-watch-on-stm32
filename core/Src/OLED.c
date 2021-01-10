@@ -512,57 +512,50 @@ void OLED_Init()
 
 void OLED_update()
 {
-    if(OLED_I2C->SR2 & I2C_SR2_BUSY)
+    // update new buffer
+    clearScreen();
+    // updata drawable objects on buffer
+    for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
     {
-        __NOP();
-    } else
-    {
-        setAddress(0 , 0);
-//            HAL_I2C_Mem_Write_DMA(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
-//            1, (uint8_t * )(oled.currentBuffer), 1024);
-
-        myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
-                (uint8_t * )(oled.currentBuffer), 1024);
-
-        // swap buffers
-        if(oled.currentBuffer == oled.firstBuffer)
+        if(oled.drawables[i].common.isUsed)
         {
-            oled.currentBuffer = oled.secondBufffer;
-        } else
-        {
-            oled.currentBuffer = oled.firstBuffer;
-        }
-
-        // update new buffer
-        clearScreen();
-        // updata drawable objects on buffer
-        for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
-        {
-            if(oled.drawables[i].common.isUsed)
+            switch(oled.drawables[i].common.type)
             {
-                switch(oled.drawables[i].common.type)
-                {
-                case TEXT_FIELD:
-                    printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                              oled.drawables[i].spec.textField.text, oled.drawables[i].spec.textField.size);
-                    break;
-                case LINE:
-                    drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                             oled.drawables[i].spec.line.x1, oled.drawables[i].spec.line.y1);
-                    break;
-                case RECTANGLE:
-                    drawRect(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                            oled.drawables[i].common.x0 + oled.drawables[i].spec.rectangle.width,
-                             oled.drawables[i].common.y0 + oled.drawables[i].spec.rectangle.height,
-                             WHITE);
-                    break;
-                case IMAGE:
-                    drawImage(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                              oled.drawables[i].spec.image.imageArray);
-                    break;
-                }
+            case TEXT_FIELD:
+                printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                          oled.drawables[i].spec.textField.text, oled.drawables[i].spec.textField.size);
+                break;
+            case LINE:
+                drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                         oled.drawables[i].spec.line.x1, oled.drawables[i].spec.line.y1);
+                break;
+            case RECTANGLE:
+                drawRect(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                        oled.drawables[i].common.x0 + oled.drawables[i].spec.rectangle.width,
+                         oled.drawables[i].common.y0 + oled.drawables[i].spec.rectangle.height,
+                         WHITE);
+                break;
+            case IMAGE:
+                drawImage(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+                          oled.drawables[i].spec.image.imageArray);
+                break;
             }
         }
+    }
+
+    // send updated buffer to OLED
+    setAddress(0 , 0);
+
+    myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
+            (uint8_t * )(oled.currentBuffer), 1024);
+
+    // swap buffers
+    if(oled.currentBuffer == oled.firstBuffer)
+    {
+        oled.currentBuffer = oled.secondBufffer;
+    } else
+    {
+        oled.currentBuffer = oled.firstBuffer;
     }
 }
 

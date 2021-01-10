@@ -150,6 +150,7 @@ int main(void)
 
       OLED_lineMoveEnd(line2, x, y);
       OLED_update();
+      fps++;
       if(time_s.Seconds != oldTime)
       {
           oldTime = time_s.Seconds;

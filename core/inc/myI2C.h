@@ -22,7 +22,7 @@
 
 // error codes for detecting transmission failure(NACK, arbitration lost or bus error)
 #define myI2C_SUCCESS    0x01
-#define myI2C_FAILURE   0x00
+#define myI2C_FAILURE    0x00
 /**
  * @brief This function initializes the I2C1 and I2C2 peripherials
  */
@@ -45,8 +45,19 @@ uint8_t myI2C_writeByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, 
  * @param slaveAdrr -       slave address
  * @param memAddr   -       memory address
  * @param data      -       pointer to data to send
- * @param dataLen   -       lenth of byte stream
+ * @param dataLen   -       length of byte stream
  * @retval myI2C status (myI2C_SUCCES or myI2C_FAILURE)
  */
 uint8_t myI2C_writeByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data, uint16_t dataLen);
+
+/**
+ * @brief writa a byte stream to slave starting from given memory location in DMA mode. This function works only with I2C2.
+ * @param I2Cx      -       I2C1
+ * @param slaveAddr -       slave address
+ * @param memAddr   -       memory address
+ * @param data      -       pointer to data to send
+ * @param dataLen   -       length of byte stream
+ * @retval myI2C status (myI2C_SUCCES or myI2C_FAILURE)
+ */
+uint8_t myI2C_writeByteStreamDMA(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data, uint16_t dataLen);
 #endif /* INC_MYI2C_H_ */
