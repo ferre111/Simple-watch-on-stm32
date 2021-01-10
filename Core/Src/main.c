@@ -28,6 +28,7 @@
 #include "MPU6050.h"
 #include "pressure_sensor.h"
 #include "OLED.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,35 +50,45 @@
 /* USER CODE BEGIN PV */
 struct MPU6050_ctx ctx =
 {
-    .sample_rate_div        = 8,
+    .sample_rate_div        = 255,
     .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
     .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_2000,
     .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_16,
-    .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN,
-    .master.master_clock_speed = MPU6050_I2C_CLOCK_SPEED_400,
+    .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN | MPU6050_SLV0_FIFO_EN,
     .clock_select           = MPU6050_PLL_X_GYRO,
 
+    .master.master_clock_speed = MPU6050_I2C_CLOCK_SPEED_400,
     .master.mult_mst_en            = false,
     .master.wait_for_es            = true,
-    .master.mst_p_nsr              = false,
+    .master.mst_p_nsr              = true,
+    .master.slave_delay            = 0,
     .i2c_bypass_en                 = false,
 
-//    .slave[0].addr            = PRESSUURE_SENSOR_ADDR,
-//    .slave[0].reg_addr           = 0, //todo
-//    .slave[0].byte_swap       = false,
-//    .slave[0].reg_dis     = false,
-//    .slave[0].group           = false,
+    .slave[0].addr            = QMC588L_ADDR,
+    .slave[0].RW        = true,
+    .slave[0].reg_addr  = QMC588L_XOUT_L,
+    .slave[0].byte_swap       = false,
+    .slave[0].reg_dis     = false,
+    .slave[0].group           = false,
+    .slave[0].len       = 6,
+    .slave[0].en        = true,
 
     .int_pin.level = true,
     .int_pin.open = false,
-    .int_pin.latch_en = true,
-    .int_pin.rd_clear = false, //todo
+    .int_pin.latch_en = false,
+    .int_pin.rd_clear = false,
     .fsync_int_level = false,
     .fsync_int_en = false,
+    .i2c_bypass_en = false,
 
     .interrupt_en_mask = MPU6050_INT_DATA_RDY_EN | MPU6050_INT_FIFO_OFLOW_EN | MPU6050_INT_MST_EN,
     .fifo_en    = true,
-    .i2c_mst_en = false,
+    .i2c_mst_en = true,
+
+    .QMC5883L_ctx.mode = QMC5883L_MODE_CONTINUOUS,
+    .QMC5883L_ctx.output_data_rate = QMC5883L_ODR_10,
+    .QMC5883L_ctx.full_scale = QMC5883L_RNG_8G,
+    .QMC5883L_ctx.over_sample_ratio = QMC5883L_OSR_512
 };
 /* USER CODE END PV */
 
@@ -120,15 +131,17 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   uint8_t usun;
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
-  HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
+  //HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
   MPU6050_deinit();
-  HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
+  HAL_Delay(50);
+  //HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
   MPU6050_init(&ctx);
-  HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
+  //HAL_I2C_Mem_Read(&hi2c1, 0xD0, 0x6b, 1, &usun, 1, I2C_TIMEOUT);
   OLED_Init();
   OLED_setDisplayOn();
   /* USER CODE END 2 */
@@ -136,48 +149,86 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint8_t avr = 100;
-  int64_t temp, pres, init_pres = 0;
+  int64_t temp1, pres, init_pres = 0;
+  int16_t temp2, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z;
   float alt;
   char tmp[20];
 
-  for(uint8_t i = 0; i < avr; i++)
-  {
-      static int32_t tmp_init_pres = 0;
-
-      pressure_sensor_read_temp_and_pres();
-      pressure_sensor_get_pres(&tmp_init_pres);
-
-      init_pres += tmp_init_pres;
-  }
-  init_pres /= avr;
+//  for(uint8_t i = 0; i < avr; i++)
+//  {
+//      static int32_t tmp_init_pres = 0;
+//
+//      pressure_sensor_read_temp_and_pres();
+//      pressure_sensor_get_pres(&tmp_init_pres);
+//
+//      init_pres += tmp_init_pres;
+//  }
+//  init_pres /= avr;
 
   while (1)
   {
-    pres = 0;
-    temp = 0;
+//    pres = 0;
+//    temp1 = 0;
+//    temp2 = 0;
+//
+//    for(uint8_t i = 0; i < avr; i++)
+//    {
+//        static int32_t tmp_pres = 0, tmp_temp1 = 0, tmp_temp2 = 0;
+//
+//        pressure_sensor_read_temp_and_pres();
+//        pressure_sensor_get_temp(&tmp_temp1);
+//        MPU6050_get_temp((int16_t*)&tmp_temp2);
+//        pressure_sensor_get_pres(&tmp_pres);
+//
+//        pres += tmp_pres;
+//        temp1 += tmp_temp1;
+//        temp2 += tmp_temp2;
+//    }
+//    pres /= avr;
+//    temp1 /= avr;
+//    temp2 /= avr;
 
-    for(uint8_t i = 0; i < avr; i++)
-    {
-        static int32_t tmp_pres = 0, tmp_temp = 0;
-
-        pressure_sensor_read_temp_and_pres();
-        pressure_sensor_get_temp(&tmp_temp);
-        pressure_sensor_get_pres(&tmp_pres);
-
-        pres += tmp_pres;
-        temp += tmp_temp;
-    }
-    pres /= avr;
-    temp /= avr;
-
-    pressure_sensor_calc_dif_alt(init_pres, pres, &alt);
-
-    snprintf(tmp, 20, "Temperature: %d.%dC", (int32_t)(temp / 10), (int32_t)(temp % 10));
+//    pressure_sensor_calc_dif_alt(init_pres, pres, &alt);
+    OLED_clearScreen();
+    MPU6050_get_temp(&temp2);
+    snprintf(tmp, 20, "Temperature: %d.%dC", (int16_t)(temp2 / 10), (uint16_t)(temp2 % 10));
     OLED_printText(0, 0, tmp);
-    snprintf(tmp, 20, "Pressure: %d.%d%dhPa", (int32_t)(pres / 100), (int32_t)((pres % 100) / 10), (int32_t)(pres % 10));
+//    snprintf(tmp, 20, "Temperature: %d.%dC", (int32_t)(temp2 / 10), (int32_t)(temp2 % 10));
+//    OLED_printText(1, 0, tmp);
+//    snprintf(tmp, 20, "Pressure: %d.%d%dhPa", (int32_t)(pres / 100), (int32_t)((pres % 100) / 10), (int32_t)(pres % 10));
+//    OLED_printText(2, 0, tmp);
+//    snprintf(tmp, 20, "Altitude: %fm", alt);
+//    OLED_printText(3, 0, tmp);
+    MPU6050_get_acc_x(&acc_x);
+    MPU6050_get_acc_y(&acc_y);
+    MPU6050_get_acc_z(&acc_z);
+    snprintf(tmp, 20, "Acc x: %d.%.3dg", acc_x / 1000, (uint16_t)acc_x % 1000);
     OLED_printText(1, 0, tmp);
-    snprintf(tmp, 20, "Altitude: %fm", alt);
+    snprintf(tmp, 20, "Acc y: %d.%.3dg", acc_y / 1000, (uint16_t)acc_y % 1000);
     OLED_printText(2, 0, tmp);
+    snprintf(tmp, 20, "Acc z: %d.%.3dg", acc_z / 1000, (uint16_t)acc_z % 1000);
+    OLED_printText(3, 0, tmp);
+
+//    MPU6050_get_gyro_x(&gyro_x);
+//    MPU6050_get_gyro_y(&gyro_y);
+//    MPU6050_get_gyro_z(&gyro_z);
+//    snprintf(tmp, 20, "Gyro x: %d.%.3ddeg", gyro_x / 1000, (uint16_t)gyro_x % 1000);
+//    OLED_printText(4, 0, tmp);
+//    snprintf(tmp, 20, "Gyro y: %d.%.3ddeg", gyro_y / 1000, (uint16_t)gyro_y % 1000);
+//    OLED_printText(5, 0, tmp);
+//    snprintf(tmp, 20, "Gyro z: %d.%.3ddeg", gyro_z / 1000, (uint16_t)gyro_z % 1000);
+//    OLED_printText(6, 0, tmp);
+
+    MPU6050_get_mag_x(&mag_x);
+    MPU6050_get_mag_y(&mag_y);
+    MPU6050_get_mag_z(&mag_z);
+    snprintf(tmp, 20, "Mag x: %d", mag_x);
+    OLED_printText(4, 0, tmp);
+    snprintf(tmp, 20, "Mag y: %d", mag_y);
+    OLED_printText(5, 0, tmp);
+    snprintf(tmp, 20, "Mag z: %d", mag_z);
+    OLED_printText(6, 0, tmp);
+
     OLED_update();
 
     /* USER CODE END WHILE */

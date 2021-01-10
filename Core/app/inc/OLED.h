@@ -15,7 +15,7 @@
 #define OLED_H_
 
 // * DEFINES TO BE MODIFIED BY USER */
-#define OLED_I2C_HANDLE hi2c1
+#define OLED_I2C_HANDLE hi2c2
 
 #define OLED_X_SIZE                                 128
 #define OLED_Y_SIZE                                 64

@@ -4,6 +4,7 @@
 #include "i2c.h"
 #include "stdbool.h"
 #include "main.h"
+#include "QMC5883L.h"
 
 //----------------------------------------------------------------------
 
@@ -160,8 +161,23 @@ struct MPU6050_ctx
     bool                                i2c_mst_en;
 
     enum MPU6050_clock_select           clock_select;
+
+    uint16_t                            acc_sensitivity;
+    uint16_t                            gyro_sensitivity;
+
+    struct QMC5883L_ctx                 QMC5883L_ctx;
 };
 
 void MPU6050_init(struct MPU6050_ctx *tmp_ctx);
 void MPU6050_deinit(void);
 void MPU6050_set_sample_rate_divider_reg(uint8_t div);
+void MPU6050_get_temp(int16_t *temp);
+void MPU6050_get_acc_x(int16_t *acc_x);
+void MPU6050_get_acc_y(int16_t *acc_y);
+void MPU6050_get_acc_z(int16_t *acc_z);
+void MPU6050_get_gyro_x(int16_t *gyro_x);
+void MPU6050_get_gyro_y(int16_t *gyro_y);
+void MPU6050_get_gyro_z(int16_t *gyro_z);
+void MPU6050_get_mag_x(int16_t *mag_x);
+void MPU6050_get_mag_y(int16_t *mag_y);
+void MPU6050_get_mag_z(int16_t *mag_z);

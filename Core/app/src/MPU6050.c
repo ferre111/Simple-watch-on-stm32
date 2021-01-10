@@ -1,7 +1,6 @@
 #include "MPU6050.h"
 
 #define ADDR 0xD0
-#define COUNT_OF_CALIB_REG 11
 
 #define I2C_HANDLE hi2c1
 
@@ -98,7 +97,7 @@
 //----------------------------------------------------------------------
 
 uint8_t *MPU6050_data;
-static uint8_t aux_tab[3];
+static uint8_t aux_tab[4];
 static uint8_t count_of_data_byte;
 
 //----------------------------------------------------------------------
@@ -107,16 +106,39 @@ struct MPU6050_ctx ctx;
 
 //----------------------------------------------------------------------
 
+static void set_sensitivity(void);
+
+//----------------------------------------------------------------------
+
 void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
 {
     ctx = *tmp_ctx;
 
-    aux_tab[1] = ctx.clock_select;
-    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[1], 1, I2C_TIMEOUT); //turn on device, select clk
-//    //todo
-//    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[2], 1, I2C_TIMEOUT);
-    aux_tab[1] = ctx.sample_rate_div - 1;
-    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, SMPLRT_DIV, 1, &aux_tab[1], 1, I2C_TIMEOUT);   //set sample rate divider
+    aux_tab[0] = ctx.clock_select;
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[0], 1, I2C_TIMEOUT); //turn on device, select clk
+
+    //init QMC5883L
+    aux_tab[0] = (1 << 1);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_PIN_CFG, 1, &aux_tab[0], 1, I2C_TIMEOUT); //I2C bypass enable
+
+    aux_tab[0] = 1;
+    HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, 1, &aux_tab[0], 1, I2C_TIMEOUT); //I2C bypass enable
+
+    aux_tab[0] = ctx.QMC5883L_ctx.mode | (ctx.QMC5883L_ctx.output_data_rate << 2) | (ctx.QMC5883L_ctx.full_scale << 4) | (ctx.QMC5883L_ctx.over_sample_ratio << 6);
+    //HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+    HAL_Delay(100);
+
+    HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+    //todo usun
+//    while(1)
+//    {
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x00, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x07, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x08, 1, &aux_tab[2], 1, I2C_TIMEOUT);
+//    }
+
+    aux_tab[0] = ctx.sample_rate_div - 1;
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, SMPLRT_DIV, 1, &aux_tab[0], 1, I2C_TIMEOUT);   //set sample rate divider
 
     HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, CONFIG, 1, &ctx.dlpf_acc_bandwidth, 1, I2C_TIMEOUT);   //set DLPF
 
@@ -126,47 +148,49 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
 
     HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, FIFO_EN, 1, &ctx.fifo_data_enable_mask, 1, I2C_TIMEOUT);
 
-    aux_tab[1] = ctx.master.master_clock_speed | (ctx.master.mst_p_nsr << 4) | (ctx.master.slave3_fifo_en << 5) | (ctx.master.wait_for_es << 6) | (ctx.master.mult_mst_en << 7);
-    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_MST_CTRL, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+    aux_tab[0] = ctx.master.master_clock_speed | (ctx.master.mst_p_nsr << 4) | (ctx.master.slave3_fifo_en << 5) | (ctx.master.wait_for_es << 6) | (ctx.master.mult_mst_en << 7);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_MST_CTRL, 1, &aux_tab[0], 1, I2C_TIMEOUT);
 
     if(ctx.master.slave_delay) //set sample rate for slaves
     {
         HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV4_CTRL, 1, &ctx.master.slave_delay, 1, I2C_TIMEOUT);
 
-        aux_tab[1] = (1 << 7) | ctx.master.slave_delay_mask;
-        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_MST_DELAY_CTRL, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+        aux_tab[0] = (1 << 7) | ctx.master.slave_delay_mask;
+        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_MST_DELAY_CTRL, 1, &aux_tab[0], 1, I2C_TIMEOUT);
     }
 
     for(uint8_t i = 0; i < AMOUNT_OF_SLAVES; i++)
     {
-        aux_tab[1] = ctx.slave[i].addr | (ctx.slave[i].RW << 7);
-        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_ADDR + 3*i, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+        aux_tab[0] = ctx.slave[i].addr | (ctx.slave[i].RW << 7);
+        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_ADDR + 3*i, 1, &aux_tab[0], 1, I2C_TIMEOUT);
 
         HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_REG + 3*i, 1, &ctx.slave[i].reg_addr, 1, I2C_TIMEOUT);
 
-        aux_tab[1] = ctx.slave[i].len | (ctx.slave[i].group << 4) | (ctx.slave[i].reg_dis << 5) | (ctx.slave[i].byte_swap << 6) | (ctx.slave[i].en << 7);
-        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_CTRL + 3*i, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+        aux_tab[0] = ctx.slave[i].len | (ctx.slave[i].group << 4) | (ctx.slave[i].reg_dis << 5) | (ctx.slave[i].byte_swap << 6) | (ctx.slave[i].en << 7);
+        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_CTRL + 3*i, 1, &aux_tab[0], 1, I2C_TIMEOUT);
     }
 
-    aux_tab[1] = (ctx.i2c_bypass_en << 1) | (ctx.fsync_int_level << 2) | (ctx.fsync_int_en << 3) | (ctx.int_pin.rd_clear << 4) | (ctx.int_pin.latch_en << 5) | (ctx.int_pin.open << 6) | (ctx.int_pin.level << 7);
-    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_PIN_CFG, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+    aux_tab[0] = (ctx.i2c_bypass_en << 1) | (ctx.fsync_int_en << 2) | (ctx.fsync_int_level << 3) | (ctx.int_pin.rd_clear << 4) | (ctx.int_pin.latch_en << 5) | (ctx.int_pin.open << 6) | (ctx.int_pin.level << 7);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_PIN_CFG, 1, &aux_tab[0], 1, I2C_TIMEOUT);
 
     HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_ENABLE, 1, &ctx.interrupt_en_mask, 1, I2C_TIMEOUT);
 
-    aux_tab[1] = (ctx.i2c_mst_en << 5) | (ctx.fifo_en << 6);
-
+    /*prepare dynamic allocated array for data from FIFO*/
     for(uint8_t i = 0; i < 8; i++)
     {
         if(ctx.fifo_data_enable_mask & (1 << i))
         {
-            switch(i)
+            switch(1 << i)
             {
             case MPU6050_SLV0_FIFO_EN:
                 count_of_data_byte += ctx.slave[0].len;
+                break;
             case MPU6050_SLV1_FIFO_EN:
                 count_of_data_byte += ctx.slave[1].len;
+                break;
             case MPU6050_SLV2_FIFO_EN:
                 count_of_data_byte += ctx.slave[2].len;
+                break;
             case MPU6050_ACCEL_FIFO_EN:
                 count_of_data_byte += 6;
                 break;
@@ -182,27 +206,32 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
     }
 
     MPU6050_data = (uint8_t*)malloc(count_of_data_byte);
+
+    /*set correct sensitivity*/
+    set_sensitivity();
+
+    aux_tab[0] = (ctx.i2c_mst_en << 5) | (ctx.fifo_en << 6);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, USER_CTRL, 1, &aux_tab[0], 1, I2C_TIMEOUT);
 }
 
 void MPU6050_deinit(void)
 {
-    aux_tab[1] = 1 << 7;
-    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+    aux_tab[0] = 1 << 7;
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[0], 1, I2C_TIMEOUT);
     free(MPU6050_data);
+}
+
+void QMC588L_deinit(void)
+{
+
 }
 
 static void read_data(void)
 {
     uint16_t size;
-    uint32_t tick = HAL_GetTick();
 
     HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTH, 1, (uint8_t*)&size + 1, 1, I2C_TIMEOUT);   //todo mozna sie o to zapytac
     HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTL, 1, (uint8_t*)&size, 1, I2C_TIMEOUT);
-
-    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTH, 1, &aux_tab[2], 2, I2C_TIMEOUT); //todo
-
-    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTH, 1, (uint8_t*)&size + 1, 1, I2C_TIMEOUT);   //todo mozna sie o to zapytac
-        HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTL, 1, (uint8_t*)&size, 1, I2C_TIMEOUT);
 
     if((size % 14))
     {
@@ -212,27 +241,110 @@ static void read_data(void)
     for(uint16_t i = 0; i < size; i++)
     {
         static uint8_t tmp;
-        tmp++;
+
         if(tmp == count_of_data_byte)
         {
             tmp -= count_of_data_byte;
         }
 
         HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_R_W, 1, &MPU6050_data[tmp], 1, I2C_TIMEOUT);
+        tmp++;
     }
-    uint8_t tmp = size;
-    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTH, 1, (uint8_t*)&size + 1, 1, I2C_TIMEOUT);   //todo mozna sie o to zapytac
-    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTL, 1, (uint8_t*)&size, 1, I2C_TIMEOUT);
-    uint32_t time = HAL_GetTick() - tick;
-    __NOP();
-    //założenia, rozpoznawanie gestów dodatkowo,
+}
+
+void MPU6050_get_acc_x(int16_t *acc_x)
+{
+    *acc_x = (int16_t)((MPU6050_data[0] << 8) | MPU6050_data[1]) * 1000 / ctx.acc_sensitivity; //TODO zapytaj czy tutaj nie ma problemu z wartościami
+}
+
+void MPU6050_get_acc_y(int16_t *acc_y)
+{
+    *acc_y = (int16_t)((MPU6050_data[2] << 8) | MPU6050_data[3]) * 1000 / ctx.acc_sensitivity;
+}
+
+
+void MPU6050_get_acc_z(int16_t *acc_z)
+{
+    *acc_z = (int16_t)((MPU6050_data[4] << 8) | MPU6050_data[5]) * 1000 / ctx.acc_sensitivity;
+}
+
+void MPU6050_get_temp(int16_t *temp)
+{
+    *temp = ((int16_t)((MPU6050_data[6] << 8) | MPU6050_data[7])) / 34 + 365;
+}
+
+void MPU6050_get_gyro_x(int16_t *gyro_x)
+{
+    *gyro_x = (int16_t)((MPU6050_data[8] << 8) | MPU6050_data[9]) * 10000 / ctx.gyro_sensitivity;
+}
+
+void MPU6050_get_gyro_y(int16_t *gyro_y)
+{
+    *gyro_y = (int16_t)((MPU6050_data[10] << 8) | MPU6050_data[11]) * 10000 / ctx.gyro_sensitivity;;
+}
+
+void MPU6050_get_gyro_z(int16_t *gyro_z)
+{
+    *gyro_z = (int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13]) * 10000 / ctx.gyro_sensitivity;;
+}
+
+void MPU6050_get_mag_x(int16_t *mag_x)
+{
+    *mag_x = (int16_t)((MPU6050_data[14] << 8) | MPU6050_data[15]);
+}
+
+void MPU6050_get_mag_y(int16_t *mag_y)
+{
+    *mag_y = (int16_t)((MPU6050_data[16] << 8) | MPU6050_data[17]);
+}
+
+
+void MPU6050_get_mag_z(int16_t *mag_z)
+{
+    *mag_z = (int16_t)((MPU6050_data[18] << 8) | MPU6050_data[19]);
+}
+
+
+static void set_sensitivity(void)
+{
+    switch(ctx.acc_full_scale_range)
+    {
+        case MPU6050_ACC_FULL_SCALE_2:
+            ctx.acc_sensitivity = 16384;
+            break;
+        case MPU6050_ACC_FULL_SCALE_4:
+            ctx.acc_sensitivity = 8192;
+            break;
+        case MPU6050_ACC_FULL_SCALE_8:
+            ctx.acc_sensitivity = 4096;
+            break;
+        case MPU6050_ACC_FULL_SCALE_16:
+            ctx.acc_sensitivity = 2048;
+            break;
+    }
+
+    switch(ctx.gyro_full_scale_range)
+    {
+        case MPU6050_GYRO_FULL_SCALE_250:
+            ctx.gyro_sensitivity = 1310;
+            break;
+        case MPU6050_GYRO_FULL_SCALE_500:
+            ctx.gyro_sensitivity = 655;
+            break;
+        case MPU6050_GYRO_FULL_SCALE_1000:
+            ctx.gyro_sensitivity = 328;
+            break;
+        case MPU6050_GYRO_FULL_SCALE_2000:
+            ctx.gyro_sensitivity = 164;
+            break;
+    }
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == INTA_Pin)
     {
-        uint8_t tmp;
+        uint8_t tmp = 0;
 
         HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, INT_STATUS, 1, &tmp, 1, I2C_TIMEOUT);
 
