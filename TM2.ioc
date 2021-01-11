@@ -1,9 +1,8 @@
 #MicroXplorer Configuration settings - do not modify
 File.Version=6
 GPIO.groupedBy=Group By Peripherals
-I2C1.ClockSpeed=100000
-I2C1.I2C_Mode=I2C_Standard
-I2C1.IPParameters=I2C_Mode,ClockSpeed
+I2C1.I2C_Mode=I2C_Fast
+I2C1.IPParameters=I2C_Mode
 I2C2.I2C_Mode=I2C_Fast
 I2C2.IPParameters=I2C_Mode
 KeepUserPlacement=false
