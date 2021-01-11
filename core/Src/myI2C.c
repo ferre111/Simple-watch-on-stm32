@@ -32,7 +32,7 @@ void myI2C_Init()
     // I2C2 configuration
     I2C2->CR2 |= I2C_CR2_FREQ & 36;                                     // for APB1 frequency = 36Mhz
     I2C2->CCR |= I2C_CCR_FS;                                            // fast mode
-    I2C2->CCR |= 58;                                                   // change it to 27 for 400khz
+    I2C2->CCR |= 27;                                                   // change it to 27 for 400khz
     I2C2->TRISE |= 0x02;
     I2C2->CR1 |= I2C_CR1_PE;                                            // enable I2C2
 
@@ -53,7 +53,7 @@ void myI2C_Init()
     // I2C1 configuration
     I2C1->CR2 |= I2C_CR2_FREQ & 36;                                     // for APB1 frequency = 36Mhz
     I2C1->CCR |= I2C_CCR_FS;                                            // fast mode
-    I2C1->CCR |= 270;                                                   // change it to 27 for 400khz
+    I2C1->CCR |= 27;                                                   // change it to 27 for 400khz
     I2C1->TRISE |= 0x02;
     I2C1->CR1 |= I2C_CR1_PE;                                            // enable I2C1
 }
