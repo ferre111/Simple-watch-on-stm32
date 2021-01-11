@@ -51,8 +51,8 @@ uint8_t myI2C_writeByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, 
 uint8_t myI2C_writeByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data, uint16_t dataLen);
 
 /**
- * @brief writa a byte stream to slave starting from given memory location in DMA mode. This function works only with I2C2.
- * @param I2Cx      -       I2C1
+ * @brief writa a byte stream to slave starting from given memory location in DMA mode. This function works only with I2C2(OLED).
+ * @param I2Cx      -       I2C2
  * @param slaveAddr -       slave address
  * @param memAddr   -       memory address
  * @param data      -       pointer to data to send
@@ -60,4 +60,25 @@ uint8_t myI2C_writeByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t mem
  * @retval myI2C status (myI2C_SUCCES or myI2C_FAILURE)
  */
 uint8_t myI2C_writeByteStreamDMA(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data, uint16_t dataLen);
+
+/**
+ * @brief read byte stream from given slave memory location in polling mode.
+ * @param I2Cx      -       I2C1 or I2C2
+ * @param slaveAddr -       slave address
+ * @param memAddr   -       memory address
+ * @param data      -       address at which the received byte stream will be stored
+ * @param dataLen   -       length of byte stream
+ * @retval myI2C status (myI2C_SUCCES or myI2C_FAILURE)
+ */
+uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data, uint8_t dataLen);
+
+/**
+ * @brief read signle byte from given slave memory location in polling mode.
+ * @param I2Cx      -       I2C1 or I2C2
+ * @param slaveAddr -       slave address
+ * @param memAddr   -       memory address
+ * @param data      -       address at which the received byte will be stored
+ * @retval myI2C status (myI2C_SUCCES or myI2C_FAILURE)
+ */
+uint8_t myI2C_readByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data);
 #endif /* INC_MYI2C_H_ */

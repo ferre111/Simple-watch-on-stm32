@@ -27,6 +27,7 @@
 #include "OLED.h"
 #include "images.h"
 #include "myI2C.h"
+#include "pressure_sensor.h"
 
 /* USER CODE END Includes */
 
@@ -49,6 +50,7 @@
 
 /* USER CODE BEGIN PV */
     uint16_t fps = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,11 +96,11 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   myI2C_Init();
+  HAL_Delay(50);
 
-/*
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
-*/
+
 
 
 
@@ -124,6 +126,9 @@ int main(void)
   uint8_t fpsTextField = 0;
   char fpsText[8];
 
+  uint8_t tempTextField = 0;
+  char tempText[2];
+
   uint8_t oldTime = 0;
 
   uint8_t line2 = 0;
@@ -131,10 +136,12 @@ int main(void)
   OLED_createTextField(&timeTextField, 15, 24, timeText, 2);
   OLED_createTextField(&dateTextField, 38, 8, dateText, 1);
   OLED_createTextField(&fpsTextField, 100, 0, fpsText, 1);
+  OLED_createTextField(&tempTextField, 10, 0, tempText, 1);
 
   OLED_createLine(&line2, 70, 31, 100, 45);
 
   uint8_t x, y, jj = 0;
+  int32_t temp = 0;
   while (1)
   {
 
@@ -147,6 +154,9 @@ int main(void)
       HAL_RTC_GetDate(&hrtc, &date_s, RTC_FORMAT_BIN);
       sprintf(dateText, "%02d/%02d/%02d", date_s.Date, date_s.Month, date_s.Year);
 
+      pressure_sensor_read_temp_and_pres();
+      pressure_sensor_get_temp(&temp);
+      sprintf(tempText, "T:%d", temp);
 
       OLED_lineMoveEnd(line2, x, y);
       OLED_update();
