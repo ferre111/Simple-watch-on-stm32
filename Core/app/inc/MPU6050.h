@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
-#include "i2c.h"
+#include "myI2C.h"
 #include "stdbool.h"
 #include "main.h"
 #include "QMC5883L.h"
@@ -19,11 +19,15 @@ enum MPU6050_dlpf_acc_bandwidth
     MPU6050_BANDWIDTH_5
 };
 
+//----------------------------------------------------------------------
+
 enum MPU6050_gyro_or_acc
 {
     MPU6050_GYRO,
     MPU6050_ACC
 };
+
+//----------------------------------------------------------------------
 
 enum MPU6050_selftest
 {
@@ -31,6 +35,8 @@ enum MPU6050_selftest
     MPU6050_Y_SELFTEST = 64,
     MPU6050_X_SELFTEST = 128
 };
+
+//----------------------------------------------------------------------
 
 enum MPU6050_gyro_full_scale_range
 {
@@ -40,6 +46,8 @@ enum MPU6050_gyro_full_scale_range
     MPU6050_GYRO_FULL_SCALE_2000 = 24
 };
 
+//----------------------------------------------------------------------
+
 enum MPU6050_acc_full_scale_range
 {
     MPU6050_ACC_FULL_SCALE_2 = 0,
@@ -47,6 +55,8 @@ enum MPU6050_acc_full_scale_range
     MPU6050_ACC_FULL_SCALE_8 = 16,
     MPU6050_ACC_FULL_SCALE_16 = 24,
 };
+
+//----------------------------------------------------------------------
 
 enum MPU6050_FIFO_data_en
 {
@@ -59,6 +69,8 @@ enum MPU6050_FIFO_data_en
     MPU6050_XG_FIFO_EN = 64,
     MPU6050_TEMP_FIFO_EN = 128,
 };
+
+//----------------------------------------------------------------------
 
 enum MPU6050_I2C_master_clock_speed
 {
@@ -80,6 +92,8 @@ enum MPU6050_I2C_master_clock_speed
     MPU6050_I2C_CLOCK_SPEED_364
 };
 
+//----------------------------------------------------------------------
+
 enum MPU6050_clock_select
 {
     MPU6050_INTERNAL_OSC,
@@ -91,6 +105,8 @@ enum MPU6050_clock_select
     MPU6050_PLL_STOP_CLK = 7,
 };
 
+//----------------------------------------------------------------------
+
 enum MPU6050_i2c_delay_select_slave
 {
     MPU6050_DELAY_SLV0 = 1,
@@ -100,6 +116,8 @@ enum MPU6050_i2c_delay_select_slave
     MPU6050_DELAY_SLV4 = 16,
 };
 
+//----------------------------------------------------------------------
+
 enum MPUT6050_interrupt_en
 {
     MPU6050_INT_DATA_RDY_EN = 1,
@@ -107,6 +125,10 @@ enum MPUT6050_interrupt_en
     MPU6050_INT_FIFO_OFLOW_EN = 16,
 };
 
+//----------------------------------------------------------------------
+/*
+ * @brief   Structure with settings for MPU6050 auxiliary I2C.
+ */
 struct MPUT6050_I2C_master
 {
     enum MPU6050_I2C_master_clock_speed master_clock_speed;
@@ -114,11 +136,15 @@ struct MPUT6050_I2C_master
     bool                                wait_for_es;
     bool                                mst_p_nsr;
     bool                                slave3_fifo_en;
-    uint8_t                             slave_delay;    //max val 31, slave sample rate is sample_rate/(1 + I2C_slave_delay)
+    uint8_t                             slave_delay;        //max val 31, slave sample rate is sample_rate/(1 + I2C_slave_delay)
     uint8_t                             slave_delay_mask;   //choose the slaves that will have reduce samole_rate
 
 };
 
+//----------------------------------------------------------------------
+/*
+ * @brief   Structure with settings for MPU6050 slave.
+ */
 struct MPU6050_I2C_slave
 {
     uint8_t addr;
@@ -131,6 +157,10 @@ struct MPU6050_I2C_slave
     bool    en;
 };
 
+//----------------------------------------------------------------------
+/*
+ * @brief   Init pin structure.
+ */
 struct int_pin
 {
     bool    level;
@@ -139,6 +169,10 @@ struct int_pin
     bool    rd_clear;
 };
 
+//----------------------------------------------------------------------
+/*
+ * @brief   Main MPU6050 structure.
+ */
 struct MPU6050_ctx
 {
     enum MPU6050_dlpf_acc_bandwidth     dlpf_acc_bandwidth;
@@ -169,13 +203,70 @@ struct MPU6050_ctx
     struct QMC5883L_ctx                 QMC5883L_ctx;
 };
 
+//----------------------------------------------------------------------
+/*
+ * @brief   Initialize MPU6050 with parameters set in tmp_ctx structure.
+ * @param   tmp_ctx - pointer to structure with parameters to set
+ */
 void MPU6050_init(struct MPU6050_ctx *tmp_ctx);
+
+//----------------------------------------------------------------------
+/*
+ * @brief   Reset MPU6050.
+ */
 void MPU6050_deinit(void);
-void MPU6050_set_sample_rate_divider_reg(uint8_t div);
+
+//----------------------------------------------------------------------
+/*
+ * @brief   Get temperature.
+ * @param   temp - pointer to variable where value will be save, value is multiplied by 10
+ */
 void MPU6050_get_temp(int16_t *temp);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get acceleration on the x axis.
+ * @param   acc_x - pointer to variable where value will be save, value units: mg
+ */
 void MPU6050_get_acc_x(int16_t *acc_x);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get acceleration on the y axis.
+ * @param   acc_x - pointer to variable where value will be save, value units: mg
+ */
 void MPU6050_get_acc_y(int16_t *acc_y);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get acceleration on the x axis.
+ * @param   acc_z - pointer to variable where value will be save, value units: mg
+ */
 void MPU6050_get_acc_z(int16_t *acc_z);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get rotation per second on the x axis.
+ * @param   gyro_x - pointer to variable where value will be save, value units: mdeg/s
+ */
 void MPU6050_get_gyro_x(int16_t *gyro_x);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get rotation per second on the y axis.
+ * @param   gyro_y - pointer to variable where value will be save, value units: mdeg/s
+ */
 void MPU6050_get_gyro_y(int16_t *gyro_y);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get rotation per second on the z axis.
+ * @param   gyro_z - pointer to variable where value will be save, value units: mdeg/s
+ */
 void MPU6050_get_gyro_z(int16_t *gyro_z);

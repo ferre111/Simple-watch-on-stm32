@@ -8,6 +8,8 @@
 #ifndef INC_ASCII_FONT_H_
 #define INC_ASCII_FONT_H_
 
+#define ASCII_FONT_WIDTH            5;
+
 const uint8_t font_ASCII[][5] = {
    {0x00, 0x00, 0x00, 0x00, 0x00} // 20
   ,{0x00, 0x00, 0x5f, 0x00, 0x00} // 21 !

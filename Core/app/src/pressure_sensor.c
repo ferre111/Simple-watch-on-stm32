@@ -10,7 +10,7 @@
 #define ADDR PRESSUURE_SENSOR_ADDR
 #define COUNT_OF_CALIB_REG 11
 
-#define I2C_HANDLE hi2c1
+#define I2C_HANDLE I2C1
 
 //----------------------------------------------------------------------
 
@@ -77,7 +77,7 @@ void pressure_sensor_read_calib_data(void)
 {
     for(uint8_t i = 0; i < COUNT_OF_CALIB_REG; i++)
     {
-        HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xAA + i * 2, 1, aux_tab, 2, I2C_TIMEOUT);
+        myI2C_readByteStream(I2C_HANDLE, ADDR, 0xAA + i * 2, aux_tab, 2);
         *(&ctx.calib_data.AC1 + i) = (aux_tab[0] << 8) + aux_tab[1];
     }
 }
@@ -127,10 +127,10 @@ void pressure_sensor_calc_dif_alt(int32_t initial_pres, int32_t actual_pres, flo
 static void read_uncomp_temp(void)
 {
     aux_tab[0] = 0x2E;
-    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, 0xF4, 1, aux_tab, 1, I2C_TIMEOUT);
+    myI2C_readByte(I2C_HANDLE, ADDR, 0xF4, aux_tab);
     HAL_Delay(5);
 
-    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xF6, 1, aux_tab, 2, I2C_TIMEOUT);
+    myI2C_readByteStream(I2C_HANDLE, ADDR, 0xF6, aux_tab, 2);
 
     ctx.temp.uncomp_temp = (aux_tab[0] << 8) + aux_tab[1];
 }
@@ -140,7 +140,7 @@ static void read_uncomp_temp(void)
 static void read_uncomp_pres(void)
 {
     aux_tab[0] = 0x34 + (ctx.mode << 6);
-    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, 0xF4, 1, aux_tab, 1, I2C_TIMEOUT);
+    myI2C_readByte(I2C_HANDLE, ADDR, 0xF4, aux_tab);
 
     switch(ctx.mode)
     {
@@ -160,7 +160,7 @@ static void read_uncomp_pres(void)
         break;
     }
 
-    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, 0xF6, 1, aux_tab, 3, I2C_TIMEOUT);
+    myI2C_readByteStream(I2C_HANDLE, ADDR, 0xF6, aux_tab, 3);
 
     ctx.uncomp_pres = ((aux_tab[0] << 16) + (aux_tab[1] << 8) + aux_tab[2]) >> (8 - ctx.mode);
 }

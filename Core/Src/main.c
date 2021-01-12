@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "i2c.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -44,7 +43,7 @@
 /* USER CODE BEGIN PM */
 #define PRINT_TEMP(temp) temp >= 0 ? "Temperature: %d.%dC" : "Temperature: -%d.%dC"
 #define PRINT_ACC(acc, axi) acc >= 0  ? "Acc " #axi ": %d.%.3dg" : "Acc " #axi ": -%d.%.3dg"
-#define PRINT_GYRO(gyro, axi) gyro >= 0 ? "Gyro " #axi ": %d.%.3ddeg" : "Gyro " #axi ": -%d.%.3ddeg"
+#define PRINT_GYRO(gyro, axi) gyro >= 0 ? "Gyro " #axi ": %d.%.3ddeg/s" : "Gyro " #axi ": -%d.%.3ddeg/s"
 #define PRINT_MAG(mag, axi) mag >= 0  ? "Mag " #axi ": %d.%.3dG" : "Mag " #axi ": -%d.%.3dG"
 /* USER CODE END PM */
 
@@ -133,15 +132,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
-  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  //myI2C_Init();
+  myI2C_Init();
+  HAL_Delay(50);
+  MPU6050_deinit();
+  HAL_Delay(50);
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
 
-  MPU6050_deinit();
-  HAL_Delay(50);
+
   MPU6050_init(&ctx);
 
   OLED_Init();
@@ -166,7 +165,11 @@ int main(void)
 //      init_pres += tmp_init_pres;
 //  }
 //  init_pres /= avr;
-
+  uint8_t first_line;
+  OLED_createTextField(&first_line, 10, 10, tmp, 2);
+//  OLED_createTextField(&dateTextField, 38, 8, dateText, 1);
+//  OLED_createTextField(&fpsTextField, 100, 0, fpsText, 1);
+//  OLED_createTextField(&tempTextField, 10, 0, tempText, 1);
   while (1)
   {
 //    pres = 0;
@@ -191,25 +194,24 @@ int main(void)
 //    temp2 /= avr;
 
 //    pressure_sensor_calc_dif_alt(init_pres, pres, &alt);
-    OLED_clearScreen();
     MPU6050_get_temp(&temp2);
     snprintf(tmp, 20, PRINT_TEMP(temp2), abs(temp2) / 10, abs(temp2) % 10);
-    OLED_printText(0, 0, tmp);
+
 //    snprintf(tmp, 20, "Temperature: %d.%dC", (int32_t)(temp2 / 10), (int32_t)(temp2 % 10));
 //    OLED_printText(1, 0, tmp);
 //    snprintf(tmp, 20, "Pressure: %d.%d%dhPa", (int32_t)(pres / 100), (int32_t)((pres % 100) / 10), (int32_t)(pres % 10));
 //    OLED_printText(2, 0, tmp);
 //    snprintf(tmp, 20, "Altitude: %fm", alt);
 //    OLED_printText(3, 0, tmp);
-    MPU6050_get_acc_x(&acc_x);
-    MPU6050_get_acc_y(&acc_y);
-    MPU6050_get_acc_z(&acc_z);
-    snprintf(tmp, 20, PRINT_ACC(acc_x, x) , abs(acc_x) / 1000, abs(acc_x) % 1000);
-    OLED_printText(1, 0, tmp);
-    snprintf(tmp, 20, PRINT_ACC(acc_y, y) , abs(acc_y) / 1000, abs(acc_y) % 1000);
-    OLED_printText(2, 0, tmp);
-    snprintf(tmp, 20, PRINT_ACC(acc_z, z) , abs(acc_z) / 1000, abs(acc_z) % 1000);
-    OLED_printText(3, 0, tmp);
+//    MPU6050_get_acc_x(&acc_x);
+//    MPU6050_get_acc_y(&acc_y);
+//    MPU6050_get_acc_z(&acc_z);
+//    snprintf(tmp, 20, PRINT_ACC(acc_x, x) , abs(acc_x) / 1000, abs(acc_x) % 1000);
+//    OLED_printText(1, 0, tmp);
+//    snprintf(tmp, 20, PRINT_ACC(acc_y, y) , abs(acc_y) / 1000, abs(acc_y) % 1000);
+//    OLED_printText(2, 0, tmp);
+//    snprintf(tmp, 20, PRINT_ACC(acc_z, z) , abs(acc_z) / 1000, abs(acc_z) % 1000);
+//    OLED_printText(3, 0, tmp);
 
 //    MPU6050_get_gyro_x(&gyro_x);
 //    MPU6050_get_gyro_y(&gyro_y);
@@ -220,16 +222,16 @@ int main(void)
 //    OLED_printText(5, 0, tmp);
 //    snprintf(tmp, 20, PRINT_GYRO(gyro_z, z), abs(gyro_z) / 1000, abs(gyro_z) % 1000);
 //    OLED_printText(6, 0, tmp);
-
-    QMC5883L_get_mag_x(&mag_x);
-    QMC5883L_get_mag_y(&mag_y);
-    QMC5883L_get_mag_z(&mag_z);
-    snprintf(tmp, 20, PRINT_MAG(mag_x, x), abs(mag_x) / 1000, abs(mag_x) % 1000);
-    OLED_printText(4, 0, tmp);
-    snprintf(tmp, 20, PRINT_MAG(mag_y, y), abs(mag_y) / 1000, abs(mag_y) % 1000);
-    OLED_printText(5, 0, tmp);
-    snprintf(tmp, 20, PRINT_MAG(mag_z, z), abs(mag_z) / 1000, abs(mag_z) % 1000);
-    OLED_printText(6, 0, tmp);
+//
+//    QMC5883L_get_mag_x(&mag_x);
+//    QMC5883L_get_mag_y(&mag_y);
+//    QMC5883L_get_mag_z(&mag_z);
+//    snprintf(tmp, 20, PRINT_MAG(mag_x, x), abs(mag_x) / 1000, abs(mag_x) % 1000);
+//    OLED_printText(4, 0, tmp);
+//    snprintf(tmp, 20, PRINT_MAG(mag_y, y), abs(mag_y) / 1000, abs(mag_y) % 1000);
+//    OLED_printText(5, 0, tmp);
+//    snprintf(tmp, 20, PRINT_MAG(mag_z, z), abs(mag_z) / 1000, abs(mag_z) % 1000);
+//    OLED_printText(6, 0, tmp);
     OLED_update();
 
     /* USER CODE END WHILE */

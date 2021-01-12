@@ -9,10 +9,12 @@
 
 #define QMC588L_ADDR        0x1A //00011010
 
-#define QMC588L_MODE_REG    0x09
+#define QMC588L_MODE_REG_1    0x09
+#define QMC588L_MODE_REG_2    0x0A
 #define QMC588L_XOUT_L      0x00
-#define QMC588L_XOUT_H      0x01
 #define QMC588L_FBR         0x0B
+
+//----------------------------------------------------------------------
 
 enum QMC5883L_mode
 {
@@ -42,6 +44,8 @@ enum QMC5883L_over_sample_ratio
     QMC5883L_OSR_64
 };
 
+//----------------------------------------------------------------------
+
 struct QMC5883L_ctx
 {
     enum QMC5883L_mode                  mode;
@@ -50,6 +54,26 @@ struct QMC5883L_ctx
     enum QMC5883L_over_sample_ratio     over_sample_ratio;
 };
 
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get magnetic field strength on the x axis.
+ * @param   mag_x - pointer to variable where value will be save, value units: mG
+ */
 void QMC5883L_get_mag_x(int16_t *mag_x);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get magnetic field strength on the y axis.
+ * @param   mag_y - pointer to variable where value will be save, value units: mG
+ */
 void QMC5883L_get_mag_y(int16_t *mag_y);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   Get magnetic field strength on the z axis.
+ * @param   mag_z - pointer to variable where value will be save, value units: mG
+ */
 void QMC5883L_get_mag_z(int16_t *mag_z);
