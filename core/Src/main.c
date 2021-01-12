@@ -28,6 +28,8 @@
 #include "images.h"
 #include "myI2C.h"
 #include "pressure_sensor.h"
+#include "MPU6050.h"
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -43,14 +45,58 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define PRINT_TEMP(temp) temp >= 0 ? "Temperature: %d.%dC" : "Temperature: -%d.%dC"
+#define PRINT_ACC(acc, axi) acc >= 0  ? "Acc " #axi ": %d.%.3dg" : "Acc " #axi ": -%d.%.3dg"
+#define PRINT_GYRO(gyro, axi) gyro >= 0 ? "Gyro " #axi ": %d.%.3ddeg/s" : "Gyro " #axi ": -%d.%.3ddeg/s"
+#define PRINT_MAG(mag, axi) mag >= 0  ? "Mag " #axi ": %d.%.3dG" : "Mag " #axi ": -%d.%.3dG"
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
     uint16_t fps = 0;
+    struct MPU6050_ctx ctx =
+    {
+        .sample_rate_div        = 255,
+        .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
+        .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_2000,
+        .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_16,
+        .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN | MPU6050_SLV0_FIFO_EN,
+        .clock_select           = MPU6050_PLL_X_GYRO,
 
+        .master.master_clock_speed = MPU6050_I2C_CLOCK_SPEED_400,
+        .master.mult_mst_en        = false,
+        .master.wait_for_es        = true,
+        .master.mst_p_nsr          = true,
+        .master.slave_delay        = 0,
+        .i2c_bypass_en             = false,
+
+        .slave[0].addr      = QMC588L_ADDR,
+        .slave[0].RW        = true,
+        .slave[0].reg_addr  = QMC588L_XOUT_L,
+        .slave[0].byte_swap = false,
+        .slave[0].reg_dis   = false,
+        .slave[0].group     = false,
+        .slave[0].len       = 6,
+        .slave[0].en        = true,
+
+        .int_pin.level = true,
+        .int_pin.open = false,
+        .int_pin.latch_en = false,
+        .int_pin.rd_clear = false,
+        .fsync_int_level = false,
+        .fsync_int_en = false,
+        .i2c_bypass_en = false,
+
+        .interrupt_en_mask = MPU6050_INT_DATA_RDY_EN | MPU6050_INT_FIFO_OFLOW_EN | MPU6050_INT_MST_EN,
+        .fifo_en    = true,
+        .i2c_mst_en = true,
+
+        .QMC5883L_ctx.mode = QMC5883L_MODE_CONTINUOUS,
+        .QMC5883L_ctx.output_data_rate = QMC5883L_ODR_10,
+        .QMC5883L_ctx.full_scale = QMC5883L_RNG_8G,
+        .QMC5883L_ctx.over_sample_ratio = QMC5883L_OSR_512
+    };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,9 +143,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
   myI2C_Init();
   HAL_Delay(50);
-
+  MPU6050_deinit();
+  HAL_Delay(50);
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
+
+  MPU6050_init(&ctx);
+
+  OLED_Init();
+  OLED_setDisplayOn();
 
 
 
@@ -113,7 +165,17 @@ int main(void)
 
   OLED_setDisplayOn();
 
-  char tmp[20] = "d";
+
+  char tmp[20];
+  uint8_t first_line;
+  OLED_createTextField(&first_line, 1, 50, tmp, 1);
+
+
+
+
+  int64_t temp1, pres, init_pres = 0;
+  int16_t temp2, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z;
+  float alt;
 
   uint8_t timeTextField = 0;
   RTC_TimeTypeDef time_s;
@@ -127,21 +189,18 @@ int main(void)
   char fpsText[8];
 
   uint8_t tempTextField = 0;
-  char tempText[2];
+  char tempText[5];
 
   uint8_t oldTime = 0;
 
-  uint8_t line2 = 0;
 
   OLED_createTextField(&timeTextField, 15, 24, timeText, 2);
   OLED_createTextField(&dateTextField, 38, 8, dateText, 1);
   OLED_createTextField(&fpsTextField, 100, 0, fpsText, 1);
-  OLED_createTextField(&tempTextField, 10, 0, tempText, 1);
+  OLED_createTextField(&tempTextField, 1, 60, tempText, 1);
 
-  OLED_createLine(&line2, 70, 31, 100, 45);
 
-  uint8_t x, y, jj = 0;
-  int32_t temp = 0;
+  uint8_t x, y = 0;
   while (1)
   {
 
@@ -154,11 +213,15 @@ int main(void)
       HAL_RTC_GetDate(&hrtc, &date_s, RTC_FORMAT_BIN);
       sprintf(dateText, "%02d/%02d/%02d", date_s.Date, date_s.Month, date_s.Year);
 
-      pressure_sensor_read_temp_and_pres();
-      pressure_sensor_get_temp(&temp);
-      sprintf(tempText, "T:%d", temp);
+      //pressure_sensor_read_temp_and_pres();
+      //pressure_sensor_get_temp(&temp);
+      //sprintf(tempText, "T:%d", temp);
 
-      OLED_lineMoveEnd(line2, x, y);
+      MPU6050_get_temp(&temp2);
+      snprintf(tmp, 20, PRINT_TEMP(temp2), abs(temp2) / 10, abs(temp2) % 10);
+
+
+
       OLED_update();
       fps++;
       if(time_s.Seconds != oldTime)

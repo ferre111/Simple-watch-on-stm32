@@ -9,8 +9,8 @@
 
 #include <stdint.h>
 #include <math.h>
-//#include "i2c.h"
-#include "myI2c.h"
+#include "main.h"
+#include "myI2C.h"
 
 #define PRESSUURE_SENSOR_ADDR 0xEE
 
@@ -67,3 +67,4 @@ void pressure_sensor_get_pres(int32_t *pres);
  * @param   alt - pointer to variable where value will be save
  */
 void pressure_sensor_calc_dif_alt(int32_t initial_pres, int32_t actual_pres, float *alt);
+
