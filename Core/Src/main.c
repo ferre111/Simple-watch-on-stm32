@@ -153,7 +153,7 @@ int main(void)
   int64_t temp1, pres, init_pres = 0;
   int16_t temp2, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z;
   float alt;
-  char tmp[20];
+  char tmp[10];
 
 //  for(uint8_t i = 0; i < avr; i++)
 //  {
@@ -166,7 +166,7 @@ int main(void)
 //  }
 //  init_pres /= avr;
   uint8_t first_line;
-  OLED_createTextField(&first_line, 10, 10, tmp, 2);
+  OLED_createTextField(&first_line, 0, 0, tmp, 1);
 //  OLED_createTextField(&dateTextField, 38, 8, dateText, 1);
 //  OLED_createTextField(&fpsTextField, 100, 0, fpsText, 1);
 //  OLED_createTextField(&tempTextField, 10, 0, tempText, 1);

@@ -99,7 +99,7 @@
 
 //----------------------------------------------------------------------
 
-uint8_t *MPU6050_data;
+//uint8_t *MPU6050_data;
 static uint8_t aux_tab[3];
 static uint8_t count_of_data_byte;
 
@@ -113,7 +113,7 @@ static void set_sensitivity(void);
 static void prepare_dynamic_array(void);
 
 //----------------------------------------------------------------------
-
+uint8_t MPU6050_data[20];
 void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
 {
     ctx = *tmp_ctx;
@@ -181,7 +181,7 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
         count_of_data_byte += ctx.slave[3].len;
     }
 
-    MPU6050_data = (uint8_t*)malloc(count_of_data_byte);
+    //MPU6050_data = (uint8_t*)malloc(count_of_data_byte);
 
     /*set correct sensitivity*/
     set_sensitivity();
@@ -196,7 +196,7 @@ void MPU6050_deinit(void)
 {
     aux_tab[0] = 1 << 7;
     myI2C_writeByte(I2C_HANDLE, ADDR, PWR_MGMT_1, aux_tab[0]);
-    free(MPU6050_data);
+    //free(MPU6050_data);
 
     //I2C reset
     aux_tab[0] = 1 << 1;
@@ -209,8 +209,8 @@ static void read_data(void)
 {
     uint16_t size;
 
-    myI2C_readByte(I2C_HANDLE, ADDR, FIFO_COUNTH, (uint8_t*)&size + 1);   //todo mozna sie o to zapytac
-    myI2C_readByte(I2C_HANDLE, ADDR, FIFO_COUNTL, (uint8_t*)&size);
+    myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_COUNTH, (uint8_t*)&size + 1, 1);
+    myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_COUNTL, (uint8_t*)&size, 1);
 
     if((size % 14))
     {
@@ -226,7 +226,7 @@ static void read_data(void)
             tmp -= count_of_data_byte;
         }
 
-        myI2C_readByte(I2C_HANDLE, ADDR, FIFO_R_W, &MPU6050_data[tmp]);
+        myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_R_W, &MPU6050_data[tmp], 1);
         tmp++;
     }
 }
@@ -386,7 +386,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     {
         uint8_t tmp = 0;
 
-        myI2C_readByte(I2C_HANDLE, ADDR, INT_STATUS, &tmp);
+        myI2C_readByteStream(I2C_HANDLE, ADDR, INT_STATUS, &tmp, 1);
 
         if(tmp & MPU6050_INT_DATA_RDY_EN)
         {

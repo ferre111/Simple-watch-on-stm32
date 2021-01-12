@@ -60,6 +60,8 @@ void myI2C_Init()
 
 uint8_t myI2C_writeByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t byte)
 {
+    __disable_irq();
+
     uint32_t reg = 0;
 
     while(I2Cx->SR2 & I2C_SR2_BUSY);                                    // wait until I2Cx not busy
@@ -89,11 +91,16 @@ uint8_t myI2C_writeByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, 
         I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
         return myI2C_FAILURE;
     }
+
+    __enable_irq();
+
     return myI2C_SUCCESS;
 }
 
 uint8_t myI2C_writeByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data, uint16_t dataLen)
 {
+    __disable_irq();
+
     uint32_t i = 0;
 
     while(I2Cx->SR2 & I2C_SR2_BUSY);                                    // wait until I2Cx not busy
@@ -124,6 +131,8 @@ uint8_t myI2C_writeByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t mem
         I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
         return myI2C_FAILURE;
     }
+    __enable_irq();
+
     return myI2C_SUCCESS;
 }
 
@@ -304,5 +313,20 @@ uint8_t myI2C_readByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, u
     {
         I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
         return myI2C_FAILURE;
+    }
+}
+
+void DMA1_Channel4_IRQHandler(void)
+{
+    if(DMA1->ISR & DMA_ISR_TCIF4)
+    {
+        // disable DMA1 CH4 TC interrupt
+        DMA1_Channel4->CCR &= ~DMA_CCR_TCIE;
+
+        // clear TCI flag
+        DMA1->IFCR |= DMA_IFCR_CTCIF4;
+
+        // set I2C2 stop condition
+        I2C2->CR1 |= I2C_CR1_STOP;
     }
 }
