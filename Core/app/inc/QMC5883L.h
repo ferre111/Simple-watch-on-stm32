@@ -7,7 +7,7 @@
 
 #pragma once
 
-#define QMC588L_ADDR        0x1A
+#define QMC588L_ADDR        0x1A //00011010
 
 #define QMC588L_MODE_REG    0x09
 #define QMC588L_XOUT_L      0x00
@@ -49,3 +49,7 @@ struct QMC5883L_ctx
     enum QMC5883L_full_scale            full_scale;
     enum QMC5883L_over_sample_ratio     over_sample_ratio;
 };
+
+void QMC5883L_get_mag_x(int16_t *mag_x);
+void QMC5883L_get_mag_y(int16_t *mag_y);
+void QMC5883L_get_mag_z(int16_t *mag_z);

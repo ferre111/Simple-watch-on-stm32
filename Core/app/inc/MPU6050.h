@@ -164,6 +164,7 @@ struct MPU6050_ctx
 
     uint16_t                            acc_sensitivity;
     uint16_t                            gyro_sensitivity;
+    uint16_t                            mag_sensitivity;
 
     struct QMC5883L_ctx                 QMC5883L_ctx;
 };
@@ -178,6 +179,3 @@ void MPU6050_get_acc_z(int16_t *acc_z);
 void MPU6050_get_gyro_x(int16_t *gyro_x);
 void MPU6050_get_gyro_y(int16_t *gyro_y);
 void MPU6050_get_gyro_z(int16_t *gyro_z);
-void MPU6050_get_mag_x(int16_t *mag_x);
-void MPU6050_get_mag_y(int16_t *mag_y);
-void MPU6050_get_mag_z(int16_t *mag_z);

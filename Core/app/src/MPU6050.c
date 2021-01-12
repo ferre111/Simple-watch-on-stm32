@@ -1,4 +1,5 @@
 #include "MPU6050.h"
+#include "myI2C.h"
 
 #define ADDR 0xD0
 
@@ -97,7 +98,7 @@
 //----------------------------------------------------------------------
 
 uint8_t *MPU6050_data;
-static uint8_t aux_tab[4];
+static uint8_t aux_tab[10];
 static uint8_t count_of_data_byte;
 
 //----------------------------------------------------------------------
@@ -121,26 +122,54 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
     aux_tab[0] = (1 << 1);
     HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_PIN_CFG, 1, &aux_tab[0], 1, I2C_TIMEOUT); //I2C bypass enable
 
-    aux_tab[0] = 1 << 7;
+    aux_tab[0] = (1 << 7);
     HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, 0x0A, 1, &aux_tab[0], 1, I2C_TIMEOUT); //soft reset
-    HAL_Delay(100);
+    HAL_Delay(10);
 
     aux_tab[0] = 1;
     HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, 1, &aux_tab[0], 1, I2C_TIMEOUT); //restart period
 
     aux_tab[0] = ctx.QMC5883L_ctx.mode | (ctx.QMC5883L_ctx.output_data_rate << 2) | (ctx.QMC5883L_ctx.full_scale << 4) | (ctx.QMC5883L_ctx.over_sample_ratio << 6);
     HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG, 1, &aux_tab[0], 1, I2C_TIMEOUT);
-    HAL_Delay(100);
 
-    //HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, 1, &aux_tab[0], 1, I2C_TIMEOUT);
-    //todo usun
     while(0)
     {
-        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x00, 1, &aux_tab[0], 1, I2C_TIMEOUT);
-        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x01, 1, &aux_tab[1], 1, I2C_TIMEOUT);
-//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x07, 1, &aux_tab[1], 1, I2C_TIMEOUT);
-        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x06, 1, &aux_tab[2], 1, I2C_TIMEOUT);
-        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x0D, 1, &aux_tab[3], 1, I2C_TIMEOUT);
+        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x06, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+        //if(aux_tab[0] & (1))
+        //{
+                //HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x00, 1, &aux_tab[0], 6, I2C_TIMEOUT);
+                //HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x03, 1, &aux_tab[0], 4, I2C_TIMEOUT);
+                HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x00, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+                HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x01, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+                HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x02, 1, &aux_tab[2], 1, I2C_TIMEOUT);
+                HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x03, 1, &aux_tab[3], 1, I2C_TIMEOUT);
+                HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x04, 1, &aux_tab[4], 1, I2C_TIMEOUT);
+                HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x05, 1, &aux_tab[5], 1, I2C_TIMEOUT);
+            __NOP();
+        //}
+
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x00, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x01, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x02, 1, &aux_tab[2], 1, I2C_TIMEOUT);
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x03, 1, &aux_tab[3], 1, I2C_TIMEOUT);
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x04, 1, &aux_tab[4], 1, I2C_TIMEOUT);
+//        HAL_I2C_Mem_Read(&I2C_HANDLE, QMC588L_ADDR, 0x05, 1, &aux_tab[5], 1, I2C_TIMEOUT);
+//        aux_tab[0] = 0x0A;
+//        aux_tab[1] = 1 << 7;
+//        //HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, 0x0A, 1, &aux_tab[0], 1, I2C_TIMEOUT); //soft reset
+//        HAL_I2C_Master_Transmit(&I2C_HANDLE, QMC588L_ADDR, aux_tab, 2, I2C_TIMEOUT);
+//        HAL_Delay(100);
+//
+//        aux_tab[0] = QMC588L_FBR;
+//        aux_tab[1] = 1;
+//        //HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, 1, &aux_tab[0], 1, I2C_TIMEOUT); //restart period
+//        HAL_I2C_Master_Transmit(&I2C_HANDLE, QMC588L_ADDR, aux_tab, 2, I2C_TIMEOUT);
+//
+//        aux_tab[0] = QMC588L_MODE_REG;
+//        aux_tab[1] = ctx.QMC5883L_ctx.mode | (ctx.QMC5883L_ctx.output_data_rate << 2) | (ctx.QMC5883L_ctx.full_scale << 4) | (ctx.QMC5883L_ctx.over_sample_ratio << 6);
+//        //HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+//        HAL_I2C_Master_Transmit(&I2C_HANDLE, QMC588L_ADDR, aux_tab, 2, I2C_TIMEOUT);
+//        HAL_Delay(100);
     }
 
     aux_tab[0] = ctx.sample_rate_div - 1;
@@ -167,7 +196,7 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
 
     for(uint8_t i = 0; i < AMOUNT_OF_SLAVES; i++)
     {
-        aux_tab[0] = ctx.slave[i].addr | (ctx.slave[i].RW << 7);
+        aux_tab[0] = (ctx.slave[i].addr >> 1) | (ctx.slave[i].RW << 7);
         HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_ADDR + 3*i, 1, &aux_tab[0], 1, I2C_TIMEOUT);
 
         HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_REG + 3*i, 1, &ctx.slave[i].reg_addr, 1, I2C_TIMEOUT);
@@ -225,6 +254,10 @@ void MPU6050_deinit(void)
     aux_tab[0] = 1 << 7;
     HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_tab[0], 1, I2C_TIMEOUT);
     free(MPU6050_data);
+
+    //I2C reset
+    aux_tab[0] = 1 << 1;
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, USER_CTRL, 1, &aux_tab[0], 1, I2C_TIMEOUT);
 }
 
 void QMC588L_deinit(void)
@@ -265,7 +298,10 @@ void MPU6050_get_acc_x(int16_t *acc_x)
 
 void MPU6050_get_acc_y(int16_t *acc_y)
 {
-    *acc_y = (int16_t)((MPU6050_data[2] << 8) | MPU6050_data[3]) * 1000 / ctx.acc_sensitivity;
+    *acc_y = (int32_t)((int16_t)((MPU6050_data[2] << 8) | MPU6050_data[3])) * 1000 / ctx.acc_sensitivity;
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, ACCEL_YOUT_H, 1, &aux_tab[0], 1, I2C_TIMEOUT);
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, ACCEL_YOUT_L, 1, &aux_tab[1], 1, I2C_TIMEOUT);
+    __NOP();
 }
 
 
@@ -294,22 +330,20 @@ void MPU6050_get_gyro_z(int16_t *gyro_z)
     *gyro_z = (int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13]) * 10000 / ctx.gyro_sensitivity;;
 }
 
-void MPU6050_get_mag_x(int16_t *mag_x)
+void QMC5883L_get_mag_x(int16_t *mag_x)
 {
-    *mag_x = (int16_t)((MPU6050_data[14] << 8) | MPU6050_data[15]);
+    *mag_x = (int16_t)((MPU6050_data[15] << 8) | MPU6050_data[14]) / ctx.mag_sensitivity;
 }
 
-void MPU6050_get_mag_y(int16_t *mag_y)
+void QMC5883L_get_mag_y(int16_t *mag_y)
 {
-    *mag_y = (int16_t)((MPU6050_data[16] << 8) | MPU6050_data[17]);
+    *mag_y = (int16_t)((MPU6050_data[17] << 8) | MPU6050_data[16]) / ctx.mag_sensitivity;
 }
 
-
-void MPU6050_get_mag_z(int16_t *mag_z)
+void QMC5883L_get_mag_z(int16_t *mag_z)
 {
-    *mag_z = (int16_t)((MPU6050_data[18] << 8) | MPU6050_data[19]);
+    *mag_z = (int16_t)((MPU6050_data[19] << 8) | MPU6050_data[18]) / ctx.mag_sensitivity;
 }
-
 
 static void set_sensitivity(void)
 {
@@ -343,6 +377,16 @@ static void set_sensitivity(void)
         case MPU6050_GYRO_FULL_SCALE_2000:
             ctx.gyro_sensitivity = 164;
             break;
+    }
+
+    switch(ctx.QMC5883L_ctx.full_scale)
+    {
+    case QMC5883L_RNG_2G:
+        ctx.mag_sensitivity = 12;
+        break;
+    case QMC5883L_RNG_8G:
+        ctx.mag_sensitivity = 3;
+        break;
     }
 }
 
