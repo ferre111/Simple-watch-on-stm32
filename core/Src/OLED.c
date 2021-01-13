@@ -33,38 +33,15 @@
 //---------------------------------------------------------------------------------------
 // INIT BYTE STREAM
 
-const uint8_t initSequence[33] = {
+const uint8_t initSequence[27] = {
         OLED_CMD_SetDisplayOFF,
-//        0x20,                   // set memory addressing mode
-//        0x02,                   // page addressing
-//        //0x01,                 // vertical increment
-//
-//        0x22,                   // set page addressing
-//        0x00,                   // start
-//        OLED_NUM_OF_PAGES - 1,  // stop
-//
-//        0x21,                   // set column addressing
-//        0x00,                   // start
-//        OLED_X_SIZE - 1,        // stop
 
         0x20,                   // set memory addressing mode
         0x00,                   // horizontal addressing mode
 
-        0x22,                   // set page addressing
-        0x00,                   // start
-        OLED_NUM_OF_PAGES - 1,  // stop
-
-        0x21,                   // set column addressing
+        0x21,                   // set column address
         0x00,                   // start
         OLED_X_SIZE - 1,        // stop
-
-
-
-
-        0xB0,                   // set initial page 0
-
-        0x00,                   // set initial column 0
-        0x10,
 
         0xD5,                   // set display clock frequency and prescaler
         0x80,
@@ -99,7 +76,7 @@ const uint8_t initSequence[33] = {
         OLED_CMD_SetNotInversedDisplay,
 
         OLED_CMD_EnableChargePumpDuringDisplay,
-        OLED_CMD_SetDisplayON,
+        0x14,
         OLED_CMD_SetDisplayON,
 };
 
@@ -187,6 +164,7 @@ typedef struct
     uint8_t *           currentBuffer;                                   // pointer to currently used buffer
     drawable_t          drawables[OLED_MAX_DRAWABLES_COUNT];             // drrawable objects
     uint8_t             firstBufferAvailable : 1;
+    uint8_t             pagetoSend;
 } oled_t;
 
 oled_t oled;
@@ -504,8 +482,9 @@ void OLED_Init()
     {
         oled.drawables[i].common.isUsed = 0;
     }
+    oled.pagetoSend = 0;
 
-    sendCommandStream(initSequence, 32);
+    sendCommandStream(initSequence, 27);
     clearScreen();
     OLED_update();
 }
@@ -544,19 +523,11 @@ void OLED_update()
     }
 
     // send updated buffer to OLED
+    while(oled.pagetoSend != 0);
     setAddress(0 , 0);
-
+    oled.pagetoSend = 1;
     myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
-            (uint8_t * )(oled.currentBuffer), 1024);
-
-    // swap buffers
-    if(oled.currentBuffer == oled.firstBuffer)
-    {
-        oled.currentBuffer = oled.secondBufffer;
-    } else
-    {
-        oled.currentBuffer = oled.firstBuffer;
-    }
+                        (uint8_t * )(oled.currentBuffer), 128);
 }
 
 void OLED_setDisplayOn()
@@ -674,4 +645,38 @@ void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t * imageArray
     oled.drawables[*id].spec.image.imageArray = imageArray;
 }
 
+void DMA1_Channel4_IRQHandler(void)
+{
+    if(DMA1->ISR & DMA_ISR_TCIF4)
+    {
+        // disable DMA1 CH4 TC interrupt
+        DMA1_Channel4->CCR &= ~DMA_CCR_TCIE;
 
+        // clear TCI flag
+        DMA1->IFCR |= DMA_IFCR_CTCIF4;
+
+        // set I2C2 stop condition
+        I2C2->CR1 |= I2C_CR1_STOP;
+
+        if(oled.pagetoSend <= 7)
+        {
+            setAddress(oled.pagetoSend , 0);
+
+            myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
+                                ((uint8_t * )(oled.currentBuffer) + oled.pagetoSend*128), 128);
+            oled.pagetoSend++;
+
+        } else
+        {
+            // swap buffers
+            if(oled.currentBuffer == oled.firstBuffer)
+            {
+                oled.currentBuffer = oled.secondBufffer;
+            } else
+            {
+                oled.currentBuffer = oled.firstBuffer;
+            }
+            oled.pagetoSend = 0;
+        }
+    }
+}
