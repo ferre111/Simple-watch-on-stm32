@@ -183,8 +183,6 @@ int main(void)
   OLED_createTextField(&fifth_line, 0, 55, accZText, 1);
 
 
-
-
   int32_t temp1, pres, init_pres = 0;
   int16_t temp2, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z;
   float alt;
@@ -243,9 +241,8 @@ int main(void)
       snprintf(accYText, 20, PRINT_ACC(acc_y, y) , abs(acc_y) / 1000, abs(acc_y) % 1000);
       snprintf(accZText, 20, PRINT_ACC(acc_z, z) , abs(acc_z) / 1000, abs(acc_z) % 1000);
 
-
-
       OLED_update();
+
 //      fps++;
 //      if(time_s.Seconds != oldTime)
 //      {
