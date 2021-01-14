@@ -14,7 +14,7 @@ void myI2C_Init()
 
     // DMA1 CLK enable
     RCC->AHBENR |= RCC_AHBENR_DMA1EN;
-    HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);                                             // enable DMA CH4 interrupt to inform about end of transfer
     // I2C2 //
 
@@ -53,18 +53,19 @@ void myI2C_Init()
     // I2C1 configuration
     I2C1->CR2 |= I2C_CR2_FREQ & 36;                                     // for APB1 frequency = 36Mhz
     I2C1->CCR |= I2C_CCR_FS;                                            // fast mode
-    I2C1->CCR |= 27;                                                   // change it to 27 for 400khz
+    I2C1->CCR |= 100;                                                   // change it to 27 for 400khz
     I2C1->TRISE |= 0x02;
     I2C1->CR1 |= I2C_CR1_PE;                                            // enable I2C1
 }
 
 uint8_t myI2C_writeByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t byte)
 {
-    __disable_irq();
 
     uint32_t reg = 0;
 
     while(I2Cx->SR2 & I2C_SR2_BUSY);                                    // wait until I2Cx not busy
+
+    __disable_irq();
 
     I2Cx->CR1 |= I2C_CR1_START;                                         // generate start condition
     while(!(I2Cx->SR1 & I2C_SR1_SB));                                   // wait until start flag SB is set
@@ -76,6 +77,7 @@ uint8_t myI2C_writeByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, 
     if( (I2Cx->SR1 & (I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR) ))      // check for errors
     {
         I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
+        __enable_irq();
         return myI2C_FAILURE;
     }
     I2Cx->DR = memAddr;                                                 // write memory address
@@ -89,21 +91,21 @@ uint8_t myI2C_writeByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, 
     if( (I2Cx->SR1 & (I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR) ))      // check for errors
     {
         I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
+        __enable_irq();
         return myI2C_FAILURE;
     }
 
     __enable_irq();
-
     return myI2C_SUCCESS;
 }
 
 uint8_t myI2C_writeByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data, uint16_t dataLen)
 {
-    __disable_irq();
-
     uint32_t i = 0;
 
     while(I2Cx->SR2 & I2C_SR2_BUSY);                                    // wait until I2Cx not busy
+
+    __disable_irq();
 
     I2Cx->CR1 |= I2C_CR1_START;                                         // generate start condition
     while(!(I2Cx->SR1 & I2C_SR1_SB));                                   // wait until start flag SB is set
@@ -129,10 +131,10 @@ uint8_t myI2C_writeByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t mem
     if( (I2Cx->SR1 & (I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR) ))      // check for errors
     {
         I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
+        __enable_irq();
         return myI2C_FAILURE;
     }
     __enable_irq();
-
     return myI2C_SUCCESS;
 }
 
@@ -163,6 +165,8 @@ uint8_t myI2C_writeByteStreamDMA(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t 
         // send addresses in polling mode
         while(I2Cx->SR2 & I2C_SR2_BUSY);                                    // wait until I2Cx not busy
 
+        __disable_irq();
+
         I2Cx->CR1 |= I2C_CR1_START;                                         // generate start condition
         while(!(I2Cx->SR1 & I2C_SR1_SB));                                   // wait until start flag SB is set
 
@@ -180,8 +184,11 @@ uint8_t myI2C_writeByteStreamDMA(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t 
         if( (I2Cx->SR1 & (I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR) ))      // check for errors
         {
             I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
+            __enable_irq();
             return myI2C_FAILURE;
         }
+
+        __enable_irq();
 
         // end of I2C2 transfer will be handled in DMA_CH4 IRQN once DMA transfer completes.
         return myI2C_SUCCESS;
@@ -195,6 +202,8 @@ uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memA
     uint8_t i = 0;
     while(I2Cx->SR2 & I2C_SR2_BUSY);                                        // wait until I2Cx not busy
 
+    __disable_irq();
+
     I2C1->CR1 |= I2C_CR1_ACK;                                               // enable acknowledge
     I2Cx->CR1 |= I2C_CR1_START;                                             // generate start condition
     while(!(I2Cx->SR1 & I2C_SR1_SB));                                       // wait until start flag SB is set
@@ -206,6 +215,7 @@ uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memA
     if( (I2Cx->SR1 & (I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR) ))          // check for errors
     {
         I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
+        __enable_irq();
         return myI2C_FAILURE;
     }
 
@@ -227,22 +237,22 @@ uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memA
     {
         I2Cx->CR1 &= ~I2C_CR1_ACK;                                              // disable acknowledge
 
-        __disable_irq();
+        //__disable_irq();
 
         i = I2Cx->SR1;                                                          // clear ADDR flag
         i = I2Cx->SR2;
 
         I2Cx->CR1 |= I2C_CR1_STOP;                                              // make stop condition after last byte read
 
-        __enable_irq();
+        //__enable_irq();
     } else if(dataLen == 2)
     {
         I2Cx->CR1 |= I2C_CR1_POS;                                               // enable POS
-        __disable_irq();
+        //__disable_irq();
         i = I2Cx->SR1;                                                          // clear ADDR flag
         i = I2Cx->SR2;
         I2Cx->CR1 &= ~I2C_CR1_ACK;                                              // disable acknowledge
-        __enable_irq();
+        //__enable_irq();
     } else
     {
         I2C1->CR1 |= I2C_CR1_ACK;                                               // enable acknowledge
@@ -262,7 +272,7 @@ uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memA
             while(!(I2Cx->SR1 & I2C_SR1_BTF));                                  // wait on byte transfer end
 
             I2Cx->CR1 &= ~I2C_CR1_ACK;                                              // disable acknowledge
-            __disable_irq();
+            //__disable_irq();
             data[i++] = I2Cx->DR;
             while(!(I2Cx->SR1 & I2C_SR1_BTF));                                  // wait on byte transfer end
 
@@ -277,7 +287,7 @@ uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memA
         {
             while(!(I2Cx->SR1 & I2C_SR1_BTF));                                  // wait on byte transfer end
 
-            __disable_irq();
+            //__disable_irq();
             I2Cx->CR1 |= I2C_CR1_STOP;                                          // generate stop after next byte receiving
             data[i++] = I2Cx->DR;
             __enable_irq();
@@ -291,42 +301,10 @@ uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memA
 
             data[i++] = I2Cx->DR;                                               // read byte
 
+            __enable_irq();
             // ? ? busy no more ?
             return myI2C_SUCCESS;
         }
     }
 }
 
-uint8_t myI2C_readByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data)
-{
-    uint8_t reg;
-    while(I2Cx->SR2 & I2C_SR2_BUSY);                                        // wait until I2Cx not busy
-
-    I2Cx->CR1 |= I2C_CR1_START;                                             // generate start condition
-    while(!(I2Cx->SR1 & I2C_SR1_SB));                                       // wait until start flag SB is set
-
-    I2Cx->DR = slaveAddr | 0x01;                                            // write slave address to data register
-    while(!(I2Cx->SR1 & I2C_SR1_ADDR));                                     // wait until address sent
-
-    reg = I2Cx->SR2;
-    if( (I2Cx->SR1 & (I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR) ))          // check for errors
-    {
-        I2Cx->SR1 &= ~(I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR);
-        return myI2C_FAILURE;
-    }
-}
-
-void DMA1_Channel4_IRQHandler(void)
-{
-    if(DMA1->ISR & DMA_ISR_TCIF4)
-    {
-        // disable DMA1 CH4 TC interrupt
-        DMA1_Channel4->CCR &= ~DMA_CCR_TCIE;
-
-        // clear TCI flag
-        DMA1->IFCR |= DMA_IFCR_CTCIF4;
-
-        // set I2C2 stop condition
-        I2C2->CR1 |= I2C_CR1_STOP;
-    }
-}

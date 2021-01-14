@@ -5,6 +5,7 @@
 #include "stdbool.h"
 #include "main.h"
 #include "QMC5883L.h"
+#include "menu.h"
 
 //----------------------------------------------------------------------
 
@@ -253,7 +254,7 @@ void MPU6050_get_acc_z(int16_t *acc_z);
  * @brief   Get rotation per second on the x axis.
  * @param   gyro_x - pointer to variable where value will be save, value units: mdeg/s
  */
-void MPU6050_get_gyro_x(int16_t *gyro_x);
+void MPU6050_get_gyro_x(int32_t *gyro_x);
 
 //----------------------------------------------------------------------
 
@@ -261,7 +262,7 @@ void MPU6050_get_gyro_x(int16_t *gyro_x);
  * @brief   Get rotation per second on the y axis.
  * @param   gyro_y - pointer to variable where value will be save, value units: mdeg/s
  */
-void MPU6050_get_gyro_y(int16_t *gyro_y);
+void MPU6050_get_gyro_y(int32_t *gyro_y);
 
 //----------------------------------------------------------------------
 
@@ -269,4 +270,4 @@ void MPU6050_get_gyro_y(int16_t *gyro_y);
  * @brief   Get rotation per second on the z axis.
  * @param   gyro_z - pointer to variable where value will be save, value units: mdeg/s
  */
-void MPU6050_get_gyro_z(int16_t *gyro_z);
+void MPU6050_get_gyro_z(int32_t *gyro_z);

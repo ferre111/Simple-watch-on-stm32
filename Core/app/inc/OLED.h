@@ -20,6 +20,7 @@
  */
 
 #include "stm32f1xx.h"
+#include <stddef.h>
 //#include "stm32f1xx_hal_i2c.h"
 
 #ifndef OLED_H_

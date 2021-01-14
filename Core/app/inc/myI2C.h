@@ -18,6 +18,7 @@
 #define INC_MYI2C_H_
 
 #include "stm32f103xb.h"                                // this header contain
+#include "main.h"
 
 
 // error codes for detecting transmission failure(NACK, arbitration lost or bus error)
@@ -80,5 +81,5 @@ uint8_t myI2C_readByteStream(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memA
  * @param data      -       address at which the received byte will be stored
  * @retval myI2C status (myI2C_SUCCES or myI2C_FAILURE)
  */
-uint8_t myI2C_readByte(I2C_TypeDef * I2Cx, uint8_t slaveAddr, uint8_t memAddr, uint8_t * data);
+
 #endif /* INC_MYI2C_H_ */
