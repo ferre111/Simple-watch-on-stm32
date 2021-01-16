@@ -20,6 +20,7 @@
  */
 
 #include "stm32f1xx.h"
+#include <stddef.h>
 //#include "stm32f1xx_hal_i2c.h"
 
 #ifndef OLED_H_
@@ -163,7 +164,7 @@ void OLED_rectangleSetDimensions(uint8_t id, uint8_t width, uint8_t height);
  *                      image height.
  * @retval void
  */
-void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t * imageArray);
+void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, const uint8_t * imageArray);
 
 
 #endif

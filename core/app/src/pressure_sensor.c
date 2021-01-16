@@ -127,7 +127,7 @@ void pressure_sensor_calc_dif_alt(int32_t initial_pres, int32_t actual_pres, flo
 static void read_uncomp_temp(void)
 {
     aux_tab[0] = 0x2E;
-    myI2C_readByteStream(I2C_HANDLE, ADDR, 0xF4, aux_tab, 1);
+    myI2C_writeByteStream(I2C_HANDLE, ADDR, 0xF4, aux_tab, 1);
     HAL_Delay(5);
 
     myI2C_readByteStream(I2C_HANDLE, ADDR, 0xF6, aux_tab, 2);
@@ -140,7 +140,7 @@ static void read_uncomp_temp(void)
 static void read_uncomp_pres(void)
 {
     aux_tab[0] = 0x34 + (ctx.mode << 6);
-    myI2C_readByteStream(I2C_HANDLE, ADDR, 0xF4, aux_tab, 1);
+    myI2C_writeByteStream(I2C_HANDLE, ADDR, 0xF4, aux_tab, 1);
 
     switch(ctx.mode)
     {

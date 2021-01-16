@@ -25,7 +25,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "OLED.h"
-#include "images.h"
 #include "myI2C.h"
 #include "pressure_sensor.h"
 #include "MPU6050.h"
@@ -59,7 +58,7 @@
     {
         .sample_rate_div        = 255,
         .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
-        .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_2000,
+        .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_1000,
         .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_16,
         .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN | MPU6050_SLV0_FIFO_EN,
         .clock_select           = MPU6050_PLL_X_GYRO,
@@ -142,7 +141,6 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   myI2C_Init();
-  HAL_Delay(50);
   MPU6050_deinit();
   HAL_Delay(50);
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
@@ -150,9 +148,14 @@ int main(void)
 
   MPU6050_init(&ctx);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
   OLED_Init();
   OLED_setDisplayOn();
 
+  menu_process_init();
 
 
 
@@ -162,25 +165,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
 
-  char temp1Text[20];
-  uint8_t first_line;
-  OLED_createTextField(&first_line, 0, 0, temp1Text, 1);
-
-  char temp2Text[20];
-  uint8_t second_line;
-  OLED_createTextField(&second_line, 0, 8, temp2Text, 1);
-
-  char accXText[20];
-  uint8_t third_line;
-  OLED_createTextField(&third_line, 0, 16, accXText, 1);
-
-  char accYText[20];
-  uint8_t fourth_line;
-  OLED_createTextField(&fourth_line, 0, 24, accYText, 1);
-
-  char accZText[20];
-  uint8_t fifth_line;
-  OLED_createTextField(&fifth_line, 0, 55, accZText, 1);
+//  char temp1Text[20];
+//  uint8_t first_line;
+//  OLED_createTextField(&first_line, 0, 0, temp1Text, 1);
+//
+//  char temp2Text[20];
+//  uint8_t second_line;
+//  OLED_createTextField(&second_line, 0, 8, temp2Text, 1);
+//
+//  char accXText[20];
+//  uint8_t third_line;
+//  OLED_createTextField(&third_line, 0, 16, accXText, 1);
+//
+//  char accYText[20];
+//  uint8_t fourth_line;
+//  OLED_createTextField(&fourth_line, 0, 24, accYText, 1);
+//
+//  char accZText[20];
+//  uint8_t fifth_line;
+//  OLED_createTextField(&fifth_line, 0, 55, accZText, 1);
 
 
   int32_t temp1, pres, init_pres = 0;
@@ -216,9 +219,9 @@ int main(void)
   uint8_t x, y = 0;
   while (1)
   {
-
-      HAL_Delay(20);
-      HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+//
+//      HAL_Delay(20);
+//      HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
 
 //      HAL_RTC_GetTime(&hrtc, &time_s, RTC_FORMAT_BIN);
 //      sprintf(timeText, "%02d:%02d:%02d", time_s.Hours, time_s.Minutes, time_s.Seconds);
@@ -226,22 +229,22 @@ int main(void)
 //      HAL_RTC_GetDate(&hrtc, &date_s, RTC_FORMAT_BIN);
 //      sprintf(dateText, "%02d/%02d/%02d", date_s.Date, date_s.Month, date_s.Year);
 
-      pressure_sensor_read_temp_and_pres();
-      pressure_sensor_get_temp(&temp1);
-      snprintf(temp1Text, 20, PRINT_TEMP(temp1), abs(temp1) / 10, abs(temp1) % 10);
-
-      MPU6050_get_temp(&temp2);
-      snprintf(temp2Text, 20, PRINT_TEMP(temp2), abs(temp2) / 10, abs(temp2) % 10);
-
-
-      MPU6050_get_acc_x(&acc_x);
-      MPU6050_get_acc_y(&acc_y);
-      MPU6050_get_acc_z(&acc_z);
-      snprintf(accXText, 20, PRINT_ACC(acc_x, x) , abs(acc_x) / 1000, abs(acc_x) % 1000);
-      snprintf(accYText, 20, PRINT_ACC(acc_y, y) , abs(acc_y) / 1000, abs(acc_y) % 1000);
-      snprintf(accZText, 20, PRINT_ACC(acc_z, z) , abs(acc_z) / 1000, abs(acc_z) % 1000);
-
-      OLED_update();
+//      pressure_sensor_read_temp_and_pres();
+//      pressure_sensor_get_temp(&temp1);
+//      snprintf(temp1Text, 20, PRINT_TEMP(temp1), abs(temp1) / 10, abs(temp1) % 10);
+//
+//      MPU6050_get_temp(&temp2);
+//      snprintf(temp2Text, 20, PRINT_TEMP(temp2), abs(temp2) / 10, abs(temp2) % 10);
+//
+//
+//      MPU6050_get_acc_x(&acc_x);
+//      MPU6050_get_acc_y(&acc_y);
+//      MPU6050_get_acc_z(&acc_z);
+//      snprintf(accXText, 20, PRINT_ACC(acc_x, x) , abs(acc_x) / 1000, abs(acc_x) % 1000);
+//      snprintf(accYText, 20, PRINT_ACC(acc_y, y) , abs(acc_y) / 1000, abs(acc_y) % 1000);
+//      snprintf(accZText, 20, PRINT_ACC(acc_z, z) , abs(acc_z) / 1000, abs(acc_z) % 1000);
+//
+//      OLED_update();
 
 //      fps++;
 //      if(time_s.Seconds != oldTime)
@@ -250,7 +253,9 @@ int main(void)
 //          sprintf(fpsText, "%2d", fps);
 //          fps = 0;
 //      }
-
+      menu_process();
+      OLED_update();
+      HAL_Delay(30);
 
     /* USER CODE END WHILE */
 

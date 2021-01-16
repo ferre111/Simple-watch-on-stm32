@@ -329,32 +329,28 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     else
         numOfIterations = yLen + 1;
 
-    float yTemp = 0, xTemp = 0;
-
-    if(1)
+    float yTemp = 0.5f, xTemp = 0.5f;
+    for(uint8_t i = 0; i < numOfIterations; i++)
     {
-        for(uint8_t i = 0; i < numOfIterations; i++)
+        *(oled.currentBuffer + (( uint8_t ) y / 8)*OLED_X_SIZE + ( uint8_t ) x ) |= 1 << ( (uint8_t) y % 8);
+        yTemp += tan;
+        if(yTemp >= 1)
         {
-            *(oled.currentBuffer + (( uint8_t ) y / 8)*OLED_X_SIZE + ( uint8_t ) x ) |= 1 << ( (uint8_t) y % 8);
-            yTemp += tan;
-            if(yTemp >= 1)
-            {
-                if(yDir == 1)
-                    y++;
-                else
-                    y--;
-                yTemp = yTemp - (int)yTemp;
-            }
+            if(yDir == 1)
+                y++;
+            else
+                y--;
+            yTemp = yTemp - (int)yTemp;
+        }
 
-            xTemp += oneOverTan;
-            if(xTemp >= 1)
-            {
-                if(xDir == 1)
-                    x++;
-                else
-                    x--;
-                xTemp = xTemp - (int)xTemp;
-            }
+        xTemp += oneOverTan;
+        if(xTemp >= 1)
+        {
+            if(xDir == 1)
+                x++;
+            else
+                x--;
+            xTemp = xTemp - (int)xTemp;
         }
     }
 }
@@ -632,7 +628,7 @@ void OLED_rectangleSetDimensions(uint8_t id, uint8_t width, uint8_t height)
 }
 
 // === IMAGE ===
-void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t * imageArray)
+void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, const uint8_t * imageArray)
 {
     getNextFreeId(id);
     if(id == NULL)

@@ -1,5 +1,4 @@
 #include "MPU6050.h"
-#include "myI2C.h"
 
 #define ADDR 0xD0
 
@@ -99,7 +98,7 @@
 
 //----------------------------------------------------------------------
 
-//uint8_t *MPU6050_data;
+uint8_t *MPU6050_data;
 static uint8_t aux_tab[3];
 static uint8_t count_of_data_byte;
 
@@ -113,7 +112,7 @@ static void set_sensitivity(void);
 static void prepare_dynamic_array(void);
 
 //----------------------------------------------------------------------
-uint8_t MPU6050_data[20];
+//uint8_t MPU6050_data[20];
 void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
 {
     ctx = *tmp_ctx;
@@ -181,14 +180,13 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
         count_of_data_byte += ctx.slave[3].len;
     }
 
-    //MPU6050_data = (uint8_t*)malloc(count_of_data_byte);
+    MPU6050_data = (uint8_t*)malloc(count_of_data_byte);
 
     /*set correct sensitivity*/
     set_sensitivity();
 
     aux_tab[0] = (ctx.i2c_mst_en << 5) | (ctx.fifo_en << 6);
     myI2C_writeByte(I2C_HANDLE, ADDR, USER_CTRL, aux_tab[0]);
-
 }
 
 //----------------------------------------------------------------------
@@ -197,11 +195,11 @@ void MPU6050_deinit(void)
 {
     aux_tab[0] = 1 << 7;
     myI2C_writeByte(I2C_HANDLE, ADDR, PWR_MGMT_1, aux_tab[0]);
-    //free(MPU6050_data);
+    free(MPU6050_data);
 
     //I2C reset
-    aux_tab[0] = 1 << 1;
     HAL_Delay(10);
+    aux_tab[0] = 1 << 1;
     myI2C_writeByte(I2C_HANDLE, ADDR, USER_CTRL, aux_tab[0]);
 }
 
@@ -231,6 +229,9 @@ static void read_data(void)
         myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_R_W, &MPU6050_data[tmp], 1);
         tmp++;
     }
+
+    if((int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13]) > GYRO_REG_VAL_TO_CHANGE_PAGE) menu_set_next_page_flag();
+    if((int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13]) < -GYRO_REG_VAL_TO_CHANGE_PAGE) menu_set_prev_page_flag();
 }
 
 //----------------------------------------------------------------------
@@ -264,23 +265,23 @@ void MPU6050_get_temp(int16_t *temp)
 
 //----------------------------------------------------------------------
 
-void MPU6050_get_gyro_x(int16_t *gyro_x)
+void MPU6050_get_gyro_x(int32_t *gyro_x)
 {
     *gyro_x = (int32_t)((int16_t)((MPU6050_data[8] << 8) | MPU6050_data[9])) * 10000 / ctx.gyro_sensitivity;
 }
 
 //----------------------------------------------------------------------
 
-void MPU6050_get_gyro_y(int16_t *gyro_y)
+void MPU6050_get_gyro_y(int32_t *gyro_y)
 {
-    *gyro_y = (int32_t)((int16_t)((MPU6050_data[10] << 8) | MPU6050_data[11])) * 10000 / ctx.gyro_sensitivity;;
+    *gyro_y = (int32_t)((int16_t)((MPU6050_data[10] << 8) | MPU6050_data[11])) * 10000 / ctx.gyro_sensitivity;
 }
 
 //----------------------------------------------------------------------
 
-void MPU6050_get_gyro_z(int16_t *gyro_z)
+void MPU6050_get_gyro_z(int32_t *gyro_z)
 {
-    *gyro_z = (int32_t)((int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13])) * 10000 / ctx.gyro_sensitivity;;
+    *gyro_z = (int32_t)((int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13])) * 10000 / ctx.gyro_sensitivity;
 }
 
 //----------------------------------------------------------------------

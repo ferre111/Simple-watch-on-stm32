@@ -14,6 +14,8 @@
 #define QMC588L_XOUT_L      0x00
 #define QMC588L_FBR         0x0B
 
+#define PRINT_MAG(mag, axi) mag >= 0  ? "Mag " #axi ": %d.%.3dG" : "Mag " #axi ": -%d.%.3dG"
+
 //----------------------------------------------------------------------
 
 enum QMC5883L_mode

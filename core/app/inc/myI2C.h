@@ -18,6 +18,7 @@
 #define INC_MYI2C_H_
 
 #include "stm32f103xb.h"                                // this header contain
+#include "main.h"
 
 
 // error codes for detecting transmission failure(NACK, arbitration lost or bus error)

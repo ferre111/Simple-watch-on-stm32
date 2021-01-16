@@ -14,7 +14,7 @@ void myI2C_Init()
 
     // DMA1 CLK enable
     RCC->AHBENR |= RCC_AHBENR_DMA1EN;
-    HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);                                             // enable DMA CH4 interrupt to inform about end of transfer
     // I2C2 //
 
@@ -53,7 +53,7 @@ void myI2C_Init()
     // I2C1 configuration
     I2C1->CR2 |= I2C_CR2_FREQ & 36;                                     // for APB1 frequency = 36Mhz
     I2C1->CCR |= I2C_CCR_FS;                                            // fast mode
-    I2C1->CCR |= 27;                                                   // change it to 27 for 400khz
+    I2C1->CCR |= 100;                                                   // change it to 27 for 400khz
     I2C1->TRISE |= 0x02;
     I2C1->CR1 |= I2C_CR1_PE;                                            // enable I2C1
 }
