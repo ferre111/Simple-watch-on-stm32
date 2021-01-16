@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "rtc.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -41,10 +42,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define PRINT_TEMP(temp) temp >= 0 ? "Temperature: %d.%dC" : "Temperature: -%d.%dC"
-#define PRINT_ACC(acc, axi) acc >= 0  ? "Acc " #axi ": %d.%.3dg" : "Acc " #axi ": -%d.%.3dg"
-#define PRINT_GYRO(gyro, axi) gyro >= 0 ? "Gyro " #axi ": %d.%.3ddeg/s" : "Gyro " #axi ": -%d.%.3ddeg/s"
-#define PRINT_MAG(mag, axi) mag >= 0  ? "Mag " #axi ": %d.%.3dG" : "Mag " #axi ": -%d.%.3dG"
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -55,7 +53,7 @@ struct MPU6050_ctx ctx =
     .sample_rate_div        = 255,
     .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
     .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_1000,
-    .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_16,
+    .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_2,
     .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN | MPU6050_SLV0_FIFO_EN,
     .clock_select           = MPU6050_PLL_X_GYRO,
 
@@ -118,6 +116,7 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -131,14 +130,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   myI2C_Init();
   MPU6050_deinit();
   HAL_Delay(50);
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
-
-
 
   MPU6050_init(&ctx);
 
@@ -152,100 +150,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t avr = 100;
-  int16_t temp1, pres, init_pres = 0;
-  int32_t temp2;
-  int16_t acc_x, acc_y, acc_z, mag_x, mag_y, mag_z;
-  int32_t gyro_x, gyro_y, gyro_z;
-  gyro_z = 0;
-  float alt;
-  char temp1_txt[20];
-  char temp2_txt[20];
 
-  char gyro_x_txt[20];
-  char gyro_y_txt[20];
-  char gyro_z_txt[20];
-
-//  for(uint8_t i = 0; i < avr; i++)
-//  {
-//      static int32_t tmp_init_pres = 0;
-//
-//      pressure_sensor_read_temp_and_pres();
-//      pressure_sensor_get_pres(&tmp_init_pres);
-//
-//      init_pres += tmp_init_pres;
-//  }
-//  init_pres /= avr;
-  uint8_t first_line;
-  uint8_t second_line;
-  uint8_t sixth_line;
-  uint8_t seventh_line;
-  uint8_t eighth_line;
-//  OLED_createTextField(&first_line, 0, 0, temp1_txt, 1);
-//  OLED_createTextField(&second_line, 0, 8, temp2_txt, 1);
-////
-//  OLED_createTextField(&sixth_line, 0, 39, gyro_x_txt, 1);
-//  OLED_createTextField(&seventh_line, 0, 47, gyro_y_txt, 1);
-//  OLED_createTextField(&eighth_line, 0, 55, gyro_z_txt, 1);
   while (1)
   {
-
-//    pres = 0;
-//    temp1 = 0;
-//    temp2 = 0;
-//
-//    for(uint8_t i = 0; i < avr; i++)
-//    {
-//        static int32_t tmp_pres = 0, tmp_temp1 = 0, tmp_temp2 = 0;
-//
-//        pressure_sensor_read_temp_and_pres();
-//        pressure_sensor_get_temp(&tmp_temp1);
-//        MPU6050_get_temp((int16_t*)&tmp_temp2);
-//        pressure_sensor_get_pres(&tmp_pres);
-//
-//        pres += tmp_pres;
-//        temp1 += tmp_temp1;
-//        temp2 += tmp_temp2;
-//    }
-//    pres /= avr;
-//    temp1 /= avr;
-//    temp2 /= avr;
-
-//    pressure_sensor_calc_dif_alt(init_pres, pres, &alt);
-//    pressure_sensor_read_temp_and_pres();
-//    MPU6050_get_temp(&temp1);
-//    pressure_sensor_get_temp(&temp2);
-//    snprintf(temp1_txt, 20, PRINT_TEMP(temp1), abs(temp1) / 10, abs(temp1) % 10);
-//    snprintf(temp2_txt, 20, PRINT_TEMP(temp2), abs(temp2) / 10, abs(temp2) % 10);
-
-//    snprintf(tmp, 20, "Temperature: %d.%dC", (int32_t)(temp2 / 10), (int32_t)(temp2 % 10));
-//    snprintf(tmp, 20, "Pressure: %d.%d%dhPa", (int32_t)(pres / 100), (int32_t)((pres % 100) / 10), (int32_t)(pres % 10));
-//    snprintf(tmp, 20, "Altitude: %fm", alt);
-//    MPU6050_get_acc_x(&acc_x);
-//    MPU6050_get_acc_y(&acc_y);
-//    MPU6050_get_acc_z(&acc_z);
-//    snprintf(tmp, 20, PRINT_ACC(acc_x, x) , abs(acc_x) / 1000, abs(acc_x) % 1000);
-//    snprintf(tmp, 20, PRINT_ACC(acc_y, y) , abs(acc_y) / 1000, abs(acc_y) % 1000);
-//    snprintf(tmp, 20, PRINT_ACC(acc_z, z) , abs(acc_z) / 1000, abs(acc_z) % 1000);
-//    int32_t tmp_gyro_z;
-//    MPU6050_get_gyro_x(&gyro_x);
-//    MPU6050_get_gyro_y(&gyro_y);
-//    MPU6050_get_gyro_z(&tmp_gyro_z);
-//    if(tmp_gyro_z > gyro_z) gyro_z =  tmp_gyro_z;
-//    snprintf(gyro_x_txt, 20, PRINT_GYRO(gyro_x, x), abs(gyro_x) / 1000, abs(gyro_x) % 1000);
-//    snprintf(gyro_y_txt, 20, PRINT_GYRO(gyro_y, y), abs(gyro_y) / 1000, abs(gyro_y) % 1000);
-//    snprintf(gyro_z_txt, 20, PRINT_GYRO(gyro_z, z), abs(gyro_z) / 1000, abs(gyro_z) % 1000);
-//
-//    QMC5883L_get_mag_x(&mag_x);
-//    QMC5883L_get_mag_y(&mag_y);
-//    QMC5883L_get_mag_z(&mag_z);
-//    snprintf(tmp, 20, PRINT_MAG(mag_x, x), abs(mag_x) / 1000, abs(mag_x) % 1000);
-//    snprintf(tmp, 20, PRINT_MAG(mag_y, y), abs(mag_y) / 1000, abs(mag_y) % 1000);
-//    snprintf(tmp, 20, PRINT_MAG(mag_z, z), abs(mag_z) / 1000, abs(mag_z) % 1000);
     menu_process();
     OLED_update();
     HAL_Delay(100);
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -261,14 +171,16 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -286,6 +198,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }

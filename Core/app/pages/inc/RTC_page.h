@@ -8,6 +8,7 @@
 #pragma once
 
 #include "OLED.h"
+#include "rtc.h"
 #include <stdio.h>
 
 void RTC_page_init(void);

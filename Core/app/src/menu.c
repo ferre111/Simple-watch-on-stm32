@@ -12,9 +12,12 @@ struct page page_tab1[menu_pages_END] =
 {
     [RTC_page]          = {.init_fun = RTC_page_init,           .draw_fun = RTC_page_draw,          .exit_fun = RTC_page_exit},
     [temperature_page]  = {.init_fun = temperature_page_init,   .draw_fun = temperature_page_draw,  .exit_fun = temperature_page_exit},
+    [compass_page]      = {.init_fun = compass_page_init,       .draw_fun = compass_page_draw,      .exit_fun = compass_page_exit},
+    [altitude_page]     = {.init_fun = altitude_page_init,      .draw_fun = altitude_page_draw,     .exit_fun = altitude_page_exit},
+    [spirit_level_page] = {.init_fun = spirit_level_page_init,  .draw_fun = spirit_level_page_draw, .exit_fun = spirit_level_page_exit},
     [acceleration_page] = {.init_fun = acceleration_page_init,  .draw_fun = acceleration_page_draw, .exit_fun = acceleration_page_exit},
     [gyroscope_page]    = {.init_fun = gyroscope_page_init,     .draw_fun = gyroscope_page_draw,    .exit_fun = gyroscope_page_exit},
-    [compass_page]      = {.init_fun = compass_page_init,       .draw_fun = compass_page_draw,      .exit_fun = compass_page_exit},
+    [magnetometer_page] = {.init_fun = magnetometer_page_init,  .draw_fun = magnetometer_page_draw, .exit_fun = magnetometer_page_exit},
 };
 
 static struct menu_ctx ctx = {.page = menu_pages_START + 1, .page_tab = page_tab1};

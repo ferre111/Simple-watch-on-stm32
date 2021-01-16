@@ -632,7 +632,7 @@ void OLED_rectangleSetDimensions(uint8_t id, uint8_t width, uint8_t height)
 }
 
 // === IMAGE ===
-void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, uint8_t * imageArray)
+void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, const uint8_t * imageArray)
 {
     getNextFreeId(id);
     if(id == NULL)
