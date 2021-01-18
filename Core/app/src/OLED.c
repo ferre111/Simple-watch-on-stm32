@@ -415,7 +415,7 @@ static void drawImage(uint8_t x0, uint8_t y0,const uint8_t image[])
     uint8_t y1 = y0 + height - 1;
     uint8_t rem0 = y0 % 8;  // 6
 
-    uint8_t v = y0 / 8;
+    uint8_t v = (y0 / 8) % OLED_NUM_OF_PAGES;
     uint8_t c;
 
     uint16_t i = 2;
@@ -436,17 +436,17 @@ static void drawImage(uint8_t x0, uint8_t y0,const uint8_t image[])
         c = x0;
         while(c <= x1)
         {
-            *(oled.currentBuffer + v*OLED_X_SIZE + c++) |= image[i++];
+            *(oled.currentBuffer + v*OLED_X_SIZE + c++) |= image[i++] << rem0;
         }
 
         v++;
-        while(v <= y1 / 8)
+        while( (v <= y1 / 8) && (v < 8) )
         {
             c = x0;
             while(c <= x1)
             {
                 *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i - width] >> (8 - rem0);
-                if(v != y1 / 8)
+                if( (v != y1 / 8) && (v < 8) )
                     *(oled.currentBuffer + v*OLED_X_SIZE + c) |= image[i] << rem0;
                 i++;
                 c++;

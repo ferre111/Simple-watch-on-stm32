@@ -29,6 +29,7 @@
 #include "OLED.h"
 #include <stdio.h>
 #include "menu.h"
+#include "button.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -150,12 +151,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
   while (1)
   {
+    QMC5883L_process();
     menu_process();
+    button_process();
     OLED_update();
-    HAL_Delay(100);
+    HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -75,6 +75,9 @@ void menu_process_init(void);
 
 //----------------------------------------------------------------------
 
+/*
+ * @brief   This function should be insert in main loop.
+ */
 void menu_process(void);
 
 //----------------------------------------------------------------------

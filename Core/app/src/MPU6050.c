@@ -101,6 +101,7 @@
 uint8_t *MPU6050_data;
 static uint8_t aux_tab[3];
 static uint8_t count_of_data_byte;
+static bool read_data_flag;
 
 //----------------------------------------------------------------------
 
@@ -270,6 +271,43 @@ void QMC5883L_get_mag_data(struct QMC5883L_mag_data *mag_data)
 
 //----------------------------------------------------------------------
 
+void QMC5883L_process(void)
+{
+    if(read_data_flag)
+    {
+        read_data();
+        read_data_flag = false;
+
+    }
+}
+
+//----------------------------------------------------------------------
+
+void QMC5883L_EXTI_handler(void)
+{
+    uint8_t tmp = 0;
+
+    myI2C_readByteStream(I2C_HANDLE, ADDR, INT_STATUS, &tmp, 1);
+
+    if(tmp & MPU6050_INT_DATA_RDY_EN)
+    {
+        read_data_flag = true;
+    }
+
+    if(tmp & MPU6050_INT_MST_EN)
+    {
+        __NOP();
+    }
+
+    if(tmp & MPU6050_INT_FIFO_OFLOW_EN)
+    {
+        __NOP();
+    }
+}
+
+
+//----------------------------------------------------------------------
+
 static void set_sensitivity(void)
 {
     switch(ctx.acc_full_scale_range)
@@ -340,33 +378,6 @@ static void prepare_dynamic_array(void)
             default:
                 count_of_data_byte += 2;
             }
-        }
-    }
-}
-
-//----------------------------------------------------------------------
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    if(GPIO_Pin == INTA_Pin)
-    {
-        uint8_t tmp = 0;
-
-        myI2C_readByteStream(I2C_HANDLE, ADDR, INT_STATUS, &tmp, 1);
-
-        if(tmp & MPU6050_INT_DATA_RDY_EN)
-        {
-            read_data();
-        }
-
-        if(tmp & MPU6050_INT_MST_EN)
-        {
-            __NOP();
-        }
-
-        if(tmp & MPU6050_INT_FIFO_OFLOW_EN)
-        {
-            __NOP();
         }
     }
 }

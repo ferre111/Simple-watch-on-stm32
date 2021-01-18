@@ -7,7 +7,7 @@
 
 #include "altitude_page.h"
 
-#define AVR 20 //set count of sample to averaging initial pressure
+#define AVR 1 //set count of sample to averaging initial pressure
 
 static int32_t init_pres;
 static int32_t actual_pres;
