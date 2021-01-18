@@ -7,11 +7,15 @@
 
 #include "button.h"
 
-static void blank_fun(void);
-static void blank_fun_hold(void);
+//--------------------------------------------------------------------------------
+
 static void button_do_button_fun(void);
 
-static struct button ctx = {.port = BUTTON_GPIO_Port, .pin = BUTTON_Pin, .press_button_fun = blank_fun, .hold_button_fun = blank_fun_hold};
+//--------------------------------------------------------------------------------
+
+static struct button ctx = {.port = BUTTON_GPIO_Port, .pin = BUTTON_Pin, .press_button_fun = blank_fun, .hold_button_fun = blank_fun};
+
+//--------------------------------------------------------------------------------
 
 void button_set_callback_press_function(callback_press_button fun)
 {
@@ -25,10 +29,14 @@ void button_set_callback_hold_function(callback_hold_button fun)
     ctx.hold_button_fun = fun;
 }
 
+//--------------------------------------------------------------------------------
+
 void button_process(void)
 {
     button_do_button_fun();
 }
+
+//--------------------------------------------------------------------------------
 
 void button_EXTI_handler(void)
 {
@@ -41,14 +49,25 @@ void button_EXTI_handler(void)
             ctx.start_press_time = HAL_GetTick();
             ctx.press = true;
         }
-        ctx.button_state = WATCH;
     }
     else
     {
         ctx.start_unpress_time = HAL_GetTick();
-        ctx.button_state = IDLE;
     }
 }
+
+
+//--------------------------------------------------------------------------------
+
+void blank_fun(void)
+{
+    __NOP();
+//    static bool flag;
+//    HAL_GPIO_WritePin(TEST_LED_GPIO_Port, TEST_LED_Pin, flag);
+//    flag ^= 1;
+}
+
+//--------------------------------------------------------------------------------
 
 static void button_do_button_fun(void)
 {
@@ -59,7 +78,7 @@ static void button_do_button_fun(void)
             ctx.press = false;
             ctx.press_button_fun();
         }
-        else if((HAL_GetTick() - ctx.start_press_time) > BUTTON_HOLD_TIME && ctx.actual_pin_state == false)
+        else if((HAL_GetTick() - ctx.start_press_time) > BUTTON_HOLD_TIME)
         {
             ctx.press = false;
             ctx.hold_button_fun();
@@ -67,9 +86,3 @@ static void button_do_button_fun(void)
     }
 }
 
-static void blank_fun(void)
-{
-    static bool flag;
-    HAL_GPIO_WritePin(TEST_LED_GPIO_Port, TEST_LED_Pin, flag);
-    flag ^= 1;
-}

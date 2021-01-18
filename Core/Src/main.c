@@ -157,7 +157,7 @@ int main(void)
     menu_process();
     button_process();
     OLED_update();
-    HAL_Delay(10);
+    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
