@@ -25,6 +25,8 @@ static int16_t level_data_y;
 
 static uint8_t rectangle_id;
 
+uint8_t y_cord = 0;
+
 static struct MPU6050_acc_data data;
 
 static uint8_t spirit_level_image_id;
@@ -100,19 +102,19 @@ static const uint8_t spirit_level_image [] =
 static uint8_t spirit_level_pointer_id;
 static const uint8_t spirit_level_pointer [] =
 {
-    0x05, 0x05,
-    0x04, 0x0E, 0x1F, 0x0E, 0x04,
+    0x05, 0x08,
+    0x04, 0x0E, 0x1F, 0x0E, 0x04
 };
 
 
 void spirit_level_page_init(void)
 {
-    OLED_createImage(&spirit_level_pointer_id, 61, 31, spirit_level_pointer);
-    OLED_createImage(&spirit_level_image_id, 10, 10, spirit_level_image);
+    OLED_createImage(&spirit_level_pointer_id, 61, 7, spirit_level_pointer);
+    //OLED_createImage(&spirit_level_image_id, 10, 10, spirit_level_image);
 
-    //OLED_createTextField(&title_id, 47, 0, title_txt, 2);
+    OLED_createTextField(&title_id, 47, 0, title_txt, 2);
     //OLED_createLine(&line1_id, 63, 0, 63, 63);
-//    OLED_createLine(&line1_id, 0, 10, 127, 10);
+    OLED_createLine(&line1_id, 0, 10, 127, 10);
 //    OLED_createLine(&line2_id, 0, 53, 127, 53);
 //    OLED_createLine(&line3_id, 0, 10, 0, 53);
 //    OLED_createLine(&line4_id, 127, 10, 127, 53);
@@ -123,10 +125,12 @@ void spirit_level_page_init(void)
 
 void spirit_level_page_draw(void)
 {
-    MPU6050_get_acc_data(&data);
-    level_data_x = data.z * 45 / 500;
-    level_data_y = data.y * 45 / 500;
-    //snprintf(level_txt, 20, "%d'", level_data);
+//    MPU6050_get_acc_data(&data);
+//    level_data_x = data.z * 45 / 500;
+//    level_data_y = data.y * 45 / 500;
+    y_cord = ( y_cord + 1 ) % 69;
+    OLED_moveObject(spirit_level_pointer_id, y_cord, -1);
+    snprintf(title_txt, 20, "%d'", 4);
 
 //    uint8_t width = abs((level_data * 64) / 90) ;
 //    if(level_data >= 0)
@@ -143,10 +147,11 @@ void spirit_level_page_draw(void)
 
 void spirit_level_page_exit(void)
 {
+    OLED_deleteObject(spirit_level_pointer_id);
     OLED_deleteObject(title_id);
     OLED_deleteObject(line1_id);
-    OLED_deleteObject(line2_id);
-    OLED_deleteObject(line3_id);
-    OLED_deleteObject(line4_id);
-    OLED_deleteObject(level_id);
+//    OLED_deleteObject(line2_id);
+//    OLED_deleteObject(line3_id);
+//    OLED_deleteObject(line4_id);
+//    OLED_deleteObject(level_id);
 }

@@ -8,7 +8,12 @@
 #pragma once
 
 #include "OLED.h"
-#include "MPU6050.h"
+#include "pressure_sensor.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define CHANGING_DISP_DATA_TIME 5000    //in ms
 
 void temperature_page_init(void);
 void temperature_page_draw(void);

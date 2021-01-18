@@ -236,24 +236,11 @@ static void read_data(void)
 
 //----------------------------------------------------------------------
 
-void MPU6050_get_acc_x(int16_t *acc_x)
+void MPU6050_get_acc_data(struct MPU6050_acc_data *acc_data)
 {
-    *acc_x = (int32_t)((int16_t)((MPU6050_data[0] << 8) | MPU6050_data[1])) * 1000 / ctx.acc_sensitivity;
-}
-
-//----------------------------------------------------------------------
-
-void MPU6050_get_acc_y(int16_t *acc_y)
-{
-    *acc_y = (int32_t)((int16_t)((MPU6050_data[2] << 8) | MPU6050_data[3])) * 1000 / ctx.acc_sensitivity;
-}
-
-//----------------------------------------------------------------------
-
-
-void MPU6050_get_acc_z(int16_t *acc_z)
-{
-    *acc_z = (int32_t)((int16_t)((MPU6050_data[4] << 8) | MPU6050_data[5])) * 1000 / ctx.acc_sensitivity;
+    acc_data->x = (int32_t)((int16_t)((MPU6050_data[0] << 8) | MPU6050_data[1])) * 1000 / ctx.acc_sensitivity;
+    acc_data->y = (int32_t)((int16_t)((MPU6050_data[2] << 8) | MPU6050_data[3])) * 1000 / ctx.acc_sensitivity;
+    acc_data->z = (int32_t)((int16_t)((MPU6050_data[4] << 8) | MPU6050_data[5])) * 1000 / ctx.acc_sensitivity;
 }
 
 //----------------------------------------------------------------------
@@ -265,44 +252,20 @@ void MPU6050_get_temp(int16_t *temp)
 
 //----------------------------------------------------------------------
 
-void MPU6050_get_gyro_x(int32_t *gyro_x)
+void MPU6050_get_gyro_data(struct MPU6050_gyro_data *gyro_data)
 {
-    *gyro_x = (int32_t)((int16_t)((MPU6050_data[8] << 8) | MPU6050_data[9])) * 10000 / ctx.gyro_sensitivity;
+    gyro_data->x = (int32_t)((int16_t)((MPU6050_data[8] << 8) | MPU6050_data[9])) * 10000 / ctx.gyro_sensitivity;
+    gyro_data->y = (int32_t)((int16_t)((MPU6050_data[10] << 8) | MPU6050_data[11])) * 10000 / ctx.gyro_sensitivity;
+    gyro_data->z = (int32_t)((int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13])) * 10000 / ctx.gyro_sensitivity;
 }
 
 //----------------------------------------------------------------------
 
-void MPU6050_get_gyro_y(int32_t *gyro_y)
+void QMC5883L_get_mag_data(struct QMC5883L_mag_data *mag_data)
 {
-    *gyro_y = (int32_t)((int16_t)((MPU6050_data[10] << 8) | MPU6050_data[11])) * 10000 / ctx.gyro_sensitivity;
-}
-
-//----------------------------------------------------------------------
-
-void MPU6050_get_gyro_z(int32_t *gyro_z)
-{
-    *gyro_z = (int32_t)((int16_t)((MPU6050_data[12] << 8) | MPU6050_data[13])) * 10000 / ctx.gyro_sensitivity;
-}
-
-//----------------------------------------------------------------------
-
-void QMC5883L_get_mag_x(int16_t *mag_x)
-{
-    *mag_x = (int16_t)((MPU6050_data[15] << 8) | MPU6050_data[14]) / ctx.mag_sensitivity;
-}
-
-//----------------------------------------------------------------------
-
-void QMC5883L_get_mag_y(int16_t *mag_y)
-{
-    *mag_y = (int16_t)((MPU6050_data[17] << 8) | MPU6050_data[16]) / ctx.mag_sensitivity;
-}
-
-//----------------------------------------------------------------------
-
-void QMC5883L_get_mag_z(int16_t *mag_z)
-{
-    *mag_z = (int16_t)((MPU6050_data[19] << 8) | MPU6050_data[18]) / ctx.mag_sensitivity;
+    mag_data->x = (int16_t)((MPU6050_data[15] << 8) | MPU6050_data[14]) / ctx.mag_sensitivity;
+    mag_data->y = (int16_t)((MPU6050_data[17] << 8) | MPU6050_data[16]) / ctx.mag_sensitivity;
+    mag_data->z = (int16_t)((MPU6050_data[19] << 8) | MPU6050_data[18]) / ctx.mag_sensitivity;
 }
 
 //----------------------------------------------------------------------

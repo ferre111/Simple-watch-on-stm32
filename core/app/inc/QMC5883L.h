@@ -14,8 +14,6 @@
 #define QMC588L_XOUT_L      0x00
 #define QMC588L_FBR         0x0B
 
-#define PRINT_MAG(mag, axi) mag >= 0  ? "Mag " #axi ": %d.%.3dG" : "Mag " #axi ": -%d.%.3dG"
-
 //----------------------------------------------------------------------
 
 enum QMC5883L_mode
@@ -58,24 +56,17 @@ struct QMC5883L_ctx
 
 //----------------------------------------------------------------------
 
+struct QMC5883L_mag_data
+{
+    int16_t x;
+    int16_t y;
+    int16_t z;
+};
+
+//----------------------------------------------------------------------
+
 /*
  * @brief   Get magnetic field strength on the x axis.
- * @param   mag_x - pointer to variable where value will be save, value units: mG
+ * @param   mag_x - pointer to structure where values will be save, value units: mG
  */
-void QMC5883L_get_mag_x(int16_t *mag_x);
-
-//----------------------------------------------------------------------
-
-/*
- * @brief   Get magnetic field strength on the y axis.
- * @param   mag_y - pointer to variable where value will be save, value units: mG
- */
-void QMC5883L_get_mag_y(int16_t *mag_y);
-
-//----------------------------------------------------------------------
-
-/*
- * @brief   Get magnetic field strength on the z axis.
- * @param   mag_z - pointer to variable where value will be save, value units: mG
- */
-void QMC5883L_get_mag_z(int16_t *mag_z);
+void QMC5883L_get_mag_data(struct QMC5883L_mag_data *mag_data);

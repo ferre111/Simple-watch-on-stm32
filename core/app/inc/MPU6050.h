@@ -130,7 +130,7 @@ enum MPUT6050_interrupt_en
 /*
  * @brief   Structure with settings for MPU6050 auxiliary I2C.
  */
-struct MPUT6050_I2C_master
+struct MPU6050_I2C_master
 {
     enum MPU6050_I2C_master_clock_speed master_clock_speed;
     bool                                mult_mst_en;
@@ -182,7 +182,7 @@ struct MPU6050_ctx
     enum MPU6050_acc_full_scale_range   acc_full_scale_range;
     uint8_t                             fifo_data_enable_mask;
 
-    struct MPUT6050_I2C_master master;
+    struct MPU6050_I2C_master master;
     struct MPU6050_I2C_slave slave[4];
 
     struct int_pin                      int_pin;
@@ -202,6 +202,24 @@ struct MPU6050_ctx
     uint16_t                            mag_sensitivity;
 
     struct QMC5883L_ctx                 QMC5883L_ctx;
+};
+
+//----------------------------------------------------------------------
+
+struct MPU6050_acc_data
+{
+    int32_t x;
+    int32_t y;
+    int32_t z;
+};
+
+//----------------------------------------------------------------------
+
+struct MPU6050_gyro_data
+{
+    int32_t x;
+    int32_t y;
+    int32_t z;
 };
 
 //----------------------------------------------------------------------
@@ -228,46 +246,14 @@ void MPU6050_get_temp(int16_t *temp);
 
 /*
  * @brief   Get acceleration on the x axis.
- * @param   acc_x - pointer to variable where value will be save, value units: mg
+ * @param   acc_data - pointer to structure where values will be save, value units: mg
  */
-void MPU6050_get_acc_x(int16_t *acc_x);
-
-//----------------------------------------------------------------------
-
-/*
- * @brief   Get acceleration on the y axis.
- * @param   acc_x - pointer to variable where value will be save, value units: mg
- */
-void MPU6050_get_acc_y(int16_t *acc_y);
-
-//----------------------------------------------------------------------
-
-/*
- * @brief   Get acceleration on the x axis.
- * @param   acc_z - pointer to variable where value will be save, value units: mg
- */
-void MPU6050_get_acc_z(int16_t *acc_z);
+void MPU6050_get_acc_data(struct MPU6050_acc_data *acc_data);
 
 //----------------------------------------------------------------------
 
 /*
  * @brief   Get rotation per second on the x axis.
- * @param   gyro_x - pointer to variable where value will be save, value units: mdeg/s
+ * @param   gyro_data - pointer to structure where values will be save, value units: mdeg/s
  */
-void MPU6050_get_gyro_x(int32_t *gyro_x);
-
-//----------------------------------------------------------------------
-
-/*
- * @brief   Get rotation per second on the y axis.
- * @param   gyro_y - pointer to variable where value will be save, value units: mdeg/s
- */
-void MPU6050_get_gyro_y(int32_t *gyro_y);
-
-//----------------------------------------------------------------------
-
-/*
- * @brief   Get rotation per second on the z axis.
- * @param   gyro_z - pointer to variable where value will be save, value units: mdeg/s
- */
-void MPU6050_get_gyro_z(int32_t *gyro_z);
+void MPU6050_get_gyro_data(struct MPU6050_gyro_data *gyro_data);

@@ -42,6 +42,8 @@ static int16_t mag_y_buff[AVR_LEN];
 static int16_t mag_z_buff[AVR_LEN];
 static uint8_t p = 0;
 
+static struct QMC5883L_mag_data data;
+
 
 void compass_page_init(void)
 {
@@ -61,11 +63,13 @@ void compass_page_init(void)
 
 void compass_page_draw(void)
 {
-    QMC5883L_get_mag_y(&mag_y_buff[p]);
-    QMC5883L_get_mag_z(&mag_z_buff[p]);
+//    QMC5883L_get_mag_y(&mag_y_buff[p]);
+//    QMC5883L_get_mag_z(&mag_z_buff[p]);
+   // QMC5883L_get_mag_y(mag_y)8
 
-    mag_y_buff[p] -= OFFSET_Y;
-    mag_z_buff[p] -= OFFSET_Z;
+    QMC5883L_get_mag_data(&data);
+    mag_y_buff[p] = data.y - OFFSET_Y;
+    mag_z_buff[p] = data.z - OFFSET_Z;
 
     p = (p + 1) % AVR_LEN;
     mag_z = 0;
