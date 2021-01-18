@@ -20,6 +20,8 @@
 #define OFFSET_Z            33
 #define AVR_LEN             8
 
+#define PRINT_DEG(deg) deg >= 0 ? " %0.0f'" : "%0.0f'"
+
 
 static uint8_t title_text_field;
 static char title_text[7] = "COMPASS";
@@ -63,10 +65,6 @@ void compass_page_init(void)
 
 void compass_page_draw(void)
 {
-//    QMC5883L_get_mag_y(&mag_y_buff[p]);
-//    QMC5883L_get_mag_z(&mag_z_buff[p]);
-   // QMC5883L_get_mag_y(mag_y)8
-
     QMC5883L_get_mag_data(&data);
     mag_y_buff[p] = data.y - OFFSET_Y;
     mag_z_buff[p] = data.z - OFFSET_Z;
@@ -93,7 +91,7 @@ void compass_page_draw(void)
         theta = -atan2((double)mag_y,(double)mag_z);        // clockwise angle is positive in this convention
     }
 
-    snprintf(deg_text, 5, "%0.0f'", -180*theta/PI);
+    snprintf(deg_text, 5, PRINT_DEG(-180*theta/PI), -180*theta/PI);
 
     // update needle orientation
     OLED_moveObject(needle_line_field, COMPASS_CENTRE_X - NEEDLE_RADIUS*sin(theta), COMPASS_CENTRE_Y - NEEDLE_RADIUS*cos(theta));

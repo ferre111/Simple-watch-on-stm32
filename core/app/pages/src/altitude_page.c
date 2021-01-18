@@ -7,7 +7,8 @@
 
 #include "altitude_page.h"
 
-#define AVR 20 //set count of sample to averaging initial pressure
+#define AVR 10 //set count of sample to averaging initial pressure
+#define PRINT_ALT(alt) alt >= 0 ? "   %dm" : "  %dm"
 
 static int32_t init_pres;
 static int32_t actual_pres;
@@ -47,7 +48,7 @@ void altitude_page_draw(void)
     pressure_sensor_read_temp_and_pres();
     pressure_sensor_get_pres(&actual_pres);
     pressure_sensor_calc_dif_alt(init_pres, actual_pres, &alt);
-    snprintf(data_txt, 20, "%.1fm", alt);
+    snprintf(data_txt, 20, PRINT_ALT((int16_t)alt), (int16_t)alt);
 }
 
 void altitude_page_exit(void)
