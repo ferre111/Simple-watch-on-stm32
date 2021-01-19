@@ -148,111 +148,17 @@ int main(void)
 
   MPU6050_init(&ctx);
 
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
   OLED_Init();
   OLED_setDisplayOn();
 
   menu_process_init();
 
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-
-//  char temp1Text[20];
-//  uint8_t first_line;
-//  OLED_createTextField(&first_line, 0, 0, temp1Text, 1);
-//
-//  char temp2Text[20];
-//  uint8_t second_line;
-//  OLED_createTextField(&second_line, 0, 8, temp2Text, 1);
-//
-//  char accXText[20];
-//  uint8_t third_line;
-//  OLED_createTextField(&third_line, 0, 16, accXText, 1);
-//
-//  char accYText[20];
-//  uint8_t fourth_line;
-//  OLED_createTextField(&fourth_line, 0, 24, accYText, 1);
-//
-//  char accZText[20];
-//  uint8_t fifth_line;
-//  OLED_createTextField(&fifth_line, 0, 55, accZText, 1);
-
-
-  int32_t temp1, pres, init_pres = 0;
-  int16_t temp2, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z;
-  float alt;
-
-//  uint8_t timeTextField = 0;
-//  RTC_TimeTypeDef time_s;
-//  char timeText[8];
-//
-//  uint8_t dateTextField = 0;
-//  RTC_DateTypeDef date_s;
-//  char dateText[8];
-//
-//  uint8_t fpsTextField = 0;
-//  char fpsText[8];
-//
-//  uint8_t tempTextField = 0;
-//  char tempText[20];
-//
-//  uint8_t tempPresField = 0;
-//  char tempPresText[20];
-//
-//  uint8_t oldTime = 0;
-//
-//
-//  OLED_createTextField(&timeTextField, 15, 24, timeText, 2);
-//  OLED_createTextField(&dateTextField, 38, 8, dateText, 1);
-//  OLED_createTextField(&fpsTextField, 100, 0, fpsText, 1);
-//  OLED_createTextField(&tempTextField, 1, 60, tempText, 1);
-//  OLED_createTextField(&tempPresField, 1, 0, tempPresText, 1);
-
-  uint8_t x, y = 0;
   while (1)
   {
-//
-//      HAL_Delay(20);
-//      HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
-
-//      HAL_RTC_GetTime(&hrtc, &time_s, RTC_FORMAT_BIN);
-//      sprintf(timeText, "%02d:%02d:%02d", time_s.Hours, time_s.Minutes, time_s.Seconds);
-//
-//      HAL_RTC_GetDate(&hrtc, &date_s, RTC_FORMAT_BIN);
-//      sprintf(dateText, "%02d/%02d/%02d", date_s.Date, date_s.Month, date_s.Year);
-
-//      pressure_sensor_read_temp_and_pres();
-//      pressure_sensor_get_temp(&temp1);
-//      snprintf(temp1Text, 20, PRINT_TEMP(temp1), abs(temp1) / 10, abs(temp1) % 10);
-//
-//      MPU6050_get_temp(&temp2);
-//      snprintf(temp2Text, 20, PRINT_TEMP(temp2), abs(temp2) / 10, abs(temp2) % 10);
-//
-//
-//      MPU6050_get_acc_x(&acc_x);
-//      MPU6050_get_acc_y(&acc_y);
-//      MPU6050_get_acc_z(&acc_z);
-//      snprintf(accXText, 20, PRINT_ACC(acc_x, x) , abs(acc_x) / 1000, abs(acc_x) % 1000);
-//      snprintf(accYText, 20, PRINT_ACC(acc_y, y) , abs(acc_y) / 1000, abs(acc_y) % 1000);
-//      snprintf(accZText, 20, PRINT_ACC(acc_z, z) , abs(acc_z) / 1000, abs(acc_z) % 1000);
-//
-//      OLED_update();
-
-//      fps++;
-//      if(time_s.Seconds != oldTime)
-//      {
-//          oldTime = time_s.Seconds;
-//          sprintf(fpsText, "%2d", fps);
-//          fps = 0;
-//      }
       menu_process();
       OLED_update();
       HAL_Delay(30);
@@ -311,11 +217,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-//void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
-//{
-//    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
-//    fps++;
-//}
 
 
 /* USER CODE END 4 */
