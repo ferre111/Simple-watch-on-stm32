@@ -95,6 +95,7 @@ const uint8_t initSequence[27] = {
 //  .
 //  7   .
 
+// tupes of drawable objects
 typedef enum
 {
     TEXT_FIELD = 0,
@@ -112,6 +113,8 @@ typedef struct
     uint8_t isUsed : 1;
 } drawable_base_t;
 
+
+// specific parts of drawable objects
 // === TEXT FIELD ===
 typedef struct
 {
@@ -150,12 +153,14 @@ union drawable_specific
     image_t                         image;
 };
 
+// drawable object type
 typedef struct
 {
     drawable_base_t common;
     union drawable_specific spec;
 }drawable_t;
 
+// struct for managing OLED. This is not a part of API.
 typedef struct
 {
     uint8_t             firstBuffer[OLED_NUM_OF_PAGES*OLED_X_SIZE];      // two buffers used alternately for updating display
@@ -206,6 +211,7 @@ static void setAddress(uint8_t page, uint8_t column)
     myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, oled.addressArray, 3);
 }
 
+/* MACRO to set single pixel in buffer */
 #define SET_PIXEL(x, y)(*oled.currentBuffer + x + OLED_X_SIZE*((uint8_t)(y / 8) )) |= 0x01 << y % 8;
 
 static void setPixel(uint8_t x, uint8_t y)
@@ -213,6 +219,7 @@ static void setPixel(uint8_t x, uint8_t y)
     *(oled.currentBuffer + x + OLED_X_SIZE*( (uint8_t) (y / 8) )) |= 0x01 << y % 8;
 }
 
+/* clear display buffer content */
 void clearScreen()
 {
     for(uint8_t v = 0; v < OLED_NUM_OF_PAGES; v++){
@@ -222,6 +229,7 @@ void clearScreen()
     }
 }
 
+/* print text to buffer */
 static void printText(uint8_t x0, uint8_t y0, char * text, uint8_t size)
 {
 
@@ -278,6 +286,7 @@ static void printText(uint8_t x0, uint8_t y0, char * text, uint8_t size)
 
 }
 
+/* draw line in buffer */
 static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
     static float tan = 0.0f;
@@ -329,7 +338,7 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     else
         numOfIterations = yLen + 1;
 
-    float yTemp = 0, xTemp = 0;
+    float yTemp = 0.5f, xTemp = 0.5f;
 
     if(1)
     {
@@ -359,6 +368,7 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     }
 }
 
+/* draw rectangle in buffer */
 static void drawRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, enum OLED_Color color){
     uint8_t rem0 = y0 % 8;  // 6
     uint8_t rem1 = y1 % 8;  // 1
@@ -408,6 +418,7 @@ static void drawRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, enum OLED_C
     }
 }
 
+/* draw image in buffer */
 static void drawImage(uint8_t x0, uint8_t y0,const uint8_t image[])
 {
     uint8_t width = image[0], height = image[1];
@@ -456,6 +467,7 @@ static void drawImage(uint8_t x0, uint8_t y0,const uint8_t image[])
     }
 }
 
+/* get next unused ID for new drawable object*/
 static void getNextFreeId(uint8_t * id)
 {
     *id = 0;
@@ -472,28 +484,33 @@ static void getNextFreeId(uint8_t * id)
 }
 //---------------------------------------------------------------------------------------
 /* API functions */
+/* These functions are described in header file */
 
-// OK
 void OLED_Init()
 {
     uint8_t i = 0;
     oled.currentBuffer = oled.firstBuffer;
+
+    /* free all IDs */
     for(i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
     {
         oled.drawables[i].common.isUsed = 0;
     }
     oled.pagetoSend = 0;
 
+    /* send sequence of command with initialization data */
     sendCommandStream(initSequence, 27);
+
+    /* clear screen */
     clearScreen();
     OLED_update();
 }
 
 void OLED_update()
 {
-    // update new buffer
+    /* clear buffer content */
     clearScreen();
-    // updata drawable objects on buffer
+    /* updata buffer with drawable objects */
     for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
     {
         if(oled.drawables[i].common.isUsed)
@@ -522,7 +539,7 @@ void OLED_update()
         }
     }
 
-    // send updated buffer to OLED
+    /* send updated buffer to OLED */
     while(oled.pagetoSend != 0);
     setAddress(0 , 0);
     oled.pagetoSend = 1;

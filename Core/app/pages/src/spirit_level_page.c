@@ -104,6 +104,7 @@ static const uint8_t spirit_level_pointer [] =
 
 void spirit_level_page_init(void)
 {
+    /* create all the drawable objects present on this page */
     OLED_createTextField(&level_data_x_id, 92, 0, level_data_x_txt, 1);
     OLED_createTextField(&level_data_y_id, 92, 8, level_data_y_txt, 1);
 
@@ -113,31 +114,25 @@ void spirit_level_page_init(void)
 
 void spirit_level_page_draw(void)
 {
+    /* read data from senor and evaluate position of device */
     MPU6050_get_acc_data(&data);
     level_data_x = data.y * 45 / 500;
     level_data_y = data.z * 45 / 500;
+
+    /* update printed values of angles */
     snprintf(level_data_x_txt, 20, PRINT_DEG(x, level_data_x), level_data_x);
     snprintf(level_data_y_txt, 20, PRINT_DEG(y, level_data_y), level_data_y);
 
+    /* update position of pointer on display */
     int16_t width =  -(level_data_x * 31) / 45 ;
     int16_t height = (level_data_y * 31) / 45 ;
 
     OLED_moveObject(spirit_level_pointer_id, INITIAL_POINTER_COORD_X - (WIDTH_MACRO(width)), INITIAL_POINTER_COORD_Y - (WIDTH_MACRO(height)));
-//    uint8_t width = abs((level_data * 64) / 90) ;
-//    if(level_data >= 0)
-//    {
-//        OLED_rectangleSetDimensions(rectangle_id, WIDTH_MACRO(width), 24);
-//        OLED_moveObject(rectangle_id, 63, 33);
-//    }
-//    else
-//    {
-//        OLED_rectangleSetDimensions(rectangle_id, WIDTH_MACRO(width), 24);
-//        OLED_moveObject(rectangle_id, 63 - (WIDTH_MACRO(width)) + 1, 33);
-//    }
 }
 
 void spirit_level_page_exit(void)
 {
+    /* delete objects present on screen at this page */
     OLED_deleteObject(spirit_level_image_id);
     OLED_deleteObject(spirit_level_pointer_id);
     OLED_deleteObject(level_data_x_id);
