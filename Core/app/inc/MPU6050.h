@@ -257,3 +257,17 @@ void MPU6050_get_acc_data(struct MPU6050_acc_data *acc_data);
  * @param   gyro_data - pointer to structure where values will be save, value units: mdeg/s
  */
 void MPU6050_get_gyro_data(struct MPU6050_gyro_data *gyro_data);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   This function should be insert in main loop.
+ */
+void QMC5883L_process(void);
+
+//----------------------------------------------------------------------
+
+/*
+ * @brief   This function should be insert in HAL_GPIO_EXTI_Callback for INTA interrupt.
+ */
+void QMC5883L_EXTI_handler(void);

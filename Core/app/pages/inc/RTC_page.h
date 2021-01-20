@@ -10,6 +10,7 @@
 #include "OLED.h"
 #include "rtc.h"
 #include <stdio.h>
+#include "button.h"
 
 void RTC_page_init(void);
 void RTC_page_draw(void);

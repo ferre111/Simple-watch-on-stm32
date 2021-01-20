@@ -10,7 +10,7 @@
 
 #define WIDTH_MACRO(width)   (width) > 0 ? ((width) > 29  ? 29 : (width)) : ((width) < -29  ? -29 : (width))
 #define HEIGHT_MACRO(height) (height) > 0 ? ((height) > 29  ? 29 : (height)) : ((height) < -29  ? -29 : (height))
-#define PRINT_DEG(axi, deg) deg >= 0 ? #axi "= %d'" : #axi "=%d'"
+
 #define INITIAL_POINTER_COORD_X 61
 #define INITIAL_POINTER_COORD_Y 29
 
@@ -116,8 +116,8 @@ void spirit_level_page_draw(void)
     MPU6050_get_acc_data(&data);
     level_data_x = data.y * 45 / 500;
     level_data_y = data.z * 45 / 500;
-    snprintf(level_data_x_txt, 20, PRINT_DEG(x, level_data_x), level_data_x);
-    snprintf(level_data_y_txt, 20, PRINT_DEG(y, level_data_y), level_data_y);
+    snprintf(level_data_x_txt, 20, "x=%d'", level_data_x);
+    snprintf(level_data_y_txt, 20, "y=%d'", level_data_y);
 
     int16_t width =  -(level_data_x * 31) / 45 ;
     int16_t height = (level_data_y * 31) / 45 ;

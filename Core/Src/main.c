@@ -24,12 +24,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "OLED.h"
-#include "myI2C.h"
-#include "pressure_sensor.h"
 #include "MPU6050.h"
+#include "pressure_sensor.h"
+#include "OLED.h"
 #include <stdio.h>
-
+#include "menu.h"
+#include "button.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,63 +39,58 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define PRES_TAB_SIZE 10
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define PRINT_TEMP(temp) temp >= 0 ? "Temperature: %d.%dC" : "Temperature: -%d.%dC"
-#define PRINT_ACC(acc, axi) acc >= 0  ? "Acc " #axi ": %d.%.3dg" : "Acc " #axi ": -%d.%.3dg"
-#define PRINT_GYRO(gyro, axi) gyro >= 0 ? "Gyro " #axi ": %d.%.3ddeg/s" : "Gyro " #axi ": -%d.%.3ddeg/s"
-#define PRINT_MAG(mag, axi) mag >= 0  ? "Mag " #axi ": %d.%.3dG" : "Mag " #axi ": -%d.%.3dG"
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-    uint16_t fps = 0;
-    struct MPU6050_ctx ctx =
-    {
-        .sample_rate_div        = 255,
-        .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
-        .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_1000,
-        .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_16,
-        .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN | MPU6050_SLV0_FIFO_EN,
-        .clock_select           = MPU6050_PLL_X_GYRO,
+struct MPU6050_ctx ctx =
+{
+    .sample_rate_div        = 255,
+    .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
+    .gyro_full_scale_range  = MPU6050_GYRO_FULL_SCALE_1000,
+    .acc_full_scale_range   = MPU6050_ACC_FULL_SCALE_2,
+    .fifo_data_enable_mask  = MPU6050_ACCEL_FIFO_EN | MPU6050_ZG_FIFO_EN | MPU6050_YG_FIFO_EN | MPU6050_XG_FIFO_EN | MPU6050_TEMP_FIFO_EN | MPU6050_SLV0_FIFO_EN,
+    .clock_select           = MPU6050_PLL_X_GYRO,
 
-        .master.master_clock_speed = MPU6050_I2C_CLOCK_SPEED_400,
-        .master.mult_mst_en        = false,
-        .master.wait_for_es        = true,
-        .master.mst_p_nsr          = true,
-        .master.slave_delay        = 0,
-        .i2c_bypass_en             = false,
+    .master.master_clock_speed = MPU6050_I2C_CLOCK_SPEED_400,
+    .master.mult_mst_en        = false,
+    .master.wait_for_es        = true,
+    .master.mst_p_nsr          = true,
+    .master.slave_delay        = 0,
+    .i2c_bypass_en             = false,
 
-        .slave[0].addr      = QMC588L_ADDR,
-        .slave[0].RW        = true,
-        .slave[0].reg_addr  = QMC588L_XOUT_L,
-        .slave[0].byte_swap = false,
-        .slave[0].reg_dis   = false,
-        .slave[0].group     = false,
-        .slave[0].len       = 6,
-        .slave[0].en        = true,
+    .slave[0].addr      = QMC588L_ADDR,
+    .slave[0].RW        = true,
+    .slave[0].reg_addr  = QMC588L_XOUT_L,
+    .slave[0].byte_swap = false,
+    .slave[0].reg_dis   = false,
+    .slave[0].group     = false,
+    .slave[0].len       = 6,
+    .slave[0].en        = true,
 
-        .int_pin.level = true,
-        .int_pin.open = false,
-        .int_pin.latch_en = false,
-        .int_pin.rd_clear = false,
-        .fsync_int_level = false,
-        .fsync_int_en = false,
-        .i2c_bypass_en = false,
+    .int_pin.level = true,
+    .int_pin.open = false,
+    .int_pin.latch_en = false,
+    .int_pin.rd_clear = false,
+    .fsync_int_level = false,
+    .fsync_int_en = false,
+    .i2c_bypass_en = false,
 
-        .interrupt_en_mask = MPU6050_INT_DATA_RDY_EN | MPU6050_INT_FIFO_OFLOW_EN | MPU6050_INT_MST_EN,
-        .fifo_en    = true,
-        .i2c_mst_en = true,
+    .interrupt_en_mask = MPU6050_INT_DATA_RDY_EN | MPU6050_INT_FIFO_OFLOW_EN | MPU6050_INT_MST_EN,
+    .fifo_en    = true,
+    .i2c_mst_en = true,
 
-        .QMC5883L_ctx.mode = QMC5883L_MODE_CONTINUOUS,
-        .QMC5883L_ctx.output_data_rate = QMC5883L_ODR_10,
-        .QMC5883L_ctx.full_scale = QMC5883L_RNG_8G,
-        .QMC5883L_ctx.over_sample_ratio = QMC5883L_OSR_512
-    };
+    .QMC5883L_ctx.mode = QMC5883L_MODE_CONTINUOUS,
+    .QMC5883L_ctx.output_data_rate = QMC5883L_ODR_10,
+    .QMC5883L_ctx.full_scale = QMC5883L_RNG_8G,
+    .QMC5883L_ctx.over_sample_ratio = QMC5883L_OSR_512
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,8 +111,6 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -148,21 +141,23 @@ int main(void)
 
   MPU6050_init(&ctx);
 
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
   OLED_Init();
   OLED_setDisplayOn();
-
   menu_process_init();
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      menu_process();
-      OLED_update();
-      HAL_Delay(30);
-
+    QMC5883L_process();
+    menu_process();
+    button_process();
+    OLED_update();
+    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -217,7 +212,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 
 /* USER CODE END 4 */
 

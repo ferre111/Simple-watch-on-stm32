@@ -45,7 +45,7 @@ void temperature_page_draw(void)
 
         if(display_data_flag)
         {
-            OLED_createTextField(&data_id, 12, 33, data_txt, 3);
+            OLED_createTextField(&data_id, 0, 33, data_txt, 3);
         }
         else
         {

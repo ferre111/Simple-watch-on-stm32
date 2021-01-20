@@ -48,18 +48,18 @@ void MX_RTC_Init(void)
 
   /** Initialize RTC and set the Time and Date
   */
-  sTime.Hours = 0x10;
-  sTime.Minutes = 0x22;
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
   sTime.Seconds = 0x0;
 
   if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
   {
     Error_Handler();
   }
-  DateToUpdate.WeekDay = RTC_WEEKDAY_THURSDAY;
-  DateToUpdate.Month = RTC_MONTH_DECEMBER;
-  DateToUpdate.Date = 0x24;
-  DateToUpdate.Year = 0x20;
+  DateToUpdate.WeekDay = RTC_WEEKDAY_MONDAY;
+  DateToUpdate.Month = RTC_MONTH_JANUARY;
+  DateToUpdate.Date = 0x1;
+  DateToUpdate.Year = 0x0;
 
   if (HAL_RTC_SetDate(&hrtc, &DateToUpdate, RTC_FORMAT_BCD) != HAL_OK)
   {

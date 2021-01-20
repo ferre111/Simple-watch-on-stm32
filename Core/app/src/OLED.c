@@ -139,7 +139,7 @@ typedef struct
 // === IMAGE ===
 typedef struct
 {
-    uint8_t *           imageArray;                                      // pointer to an array with image representation
+    uint8_t * imageArray;                                               // pointer to an array with image representation
 } image_t;
 
 union drawable_specific
@@ -275,6 +275,7 @@ static void printText(uint8_t x0, uint8_t y0, char * text, uint8_t size)
             x0 += size;
         }
     }
+
 }
 
 static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
@@ -328,28 +329,32 @@ static void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     else
         numOfIterations = yLen + 1;
 
-    float yTemp = 0.5f, xTemp = 0.5f;
-    for(uint8_t i = 0; i < numOfIterations; i++)
-    {
-        *(oled.currentBuffer + (( uint8_t ) y / 8)*OLED_X_SIZE + ( uint8_t ) x ) |= 1 << ( (uint8_t) y % 8);
-        yTemp += tan;
-        if(yTemp >= 1)
-        {
-            if(yDir == 1)
-                y++;
-            else
-                y--;
-            yTemp = yTemp - (int)yTemp;
-        }
+    float yTemp = 0, xTemp = 0;
 
-        xTemp += oneOverTan;
-        if(xTemp >= 1)
+    if(1)
+    {
+        for(uint8_t i = 0; i < numOfIterations; i++)
         {
-            if(xDir == 1)
-                x++;
-            else
-                x--;
-            xTemp = xTemp - (int)xTemp;
+            *(oled.currentBuffer + (( uint8_t ) y / 8)*OLED_X_SIZE + ( uint8_t ) x ) |= 1 << ( (uint8_t) y % 8);
+            yTemp += tan;
+            if(yTemp >= 1)
+            {
+                if(yDir == 1)
+                    y++;
+                else
+                    y--;
+                yTemp = yTemp - (int)yTemp;
+            }
+
+            xTemp += oneOverTan;
+            if(xTemp >= 1)
+            {
+                if(xDir == 1)
+                    x++;
+                else
+                    x--;
+                xTemp = xTemp - (int)xTemp;
+            }
         }
     }
 }
