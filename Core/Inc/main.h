@@ -58,14 +58,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define TEST_LED_Pin GPIO_PIN_14
-#define TEST_LED_GPIO_Port GPIOC
-#define INTA_Pin GPIO_PIN_0
-#define INTA_GPIO_Port GPIOA
-#define INTA_EXTI_IRQn EXTI0_IRQn
-#define BUTTON_Pin GPIO_PIN_12
-#define BUTTON_GPIO_Port GPIOB
+#define BUTTON_Pin GPIO_PIN_14
+#define BUTTON_GPIO_Port GPIOC
 #define BUTTON_EXTI_IRQn EXTI15_10_IRQn
+#define INTA_Pin GPIO_PIN_9
+#define INTA_GPIO_Port GPIOB
+#define INTA_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

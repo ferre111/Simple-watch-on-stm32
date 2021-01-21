@@ -10,6 +10,8 @@
 #include "QMC5883L.h"
 #include <math.h>
 
+//--------------------------------------------------------------------------------
+
 #define PI                  3.141f
 #define COMPASS_CENTRE_X    63
 #define COMPASS_CENTRE_Y    38
@@ -22,6 +24,8 @@
 
 /* MACRO for formatting string with degree value */
 #define PRINT_DEG(deg) deg >= 0 ? " %d'" : "%d'"
+
+//--------------------------------------------------------------------------------
 
 /* variables to store IDs of object on display and arrays to store displayed strings */
 static uint8_t title_text_field;
@@ -36,6 +40,7 @@ static char n_text[1] = "N", e_text[1] = "E", s_text[1] = "S", w_text[1] = "W";
 
 static uint8_t needle_line_field;
 
+//--------------------------------------------------------------------------------
 
 static int32_t mag_y, mag_z;                // variables to store values from sensor after averaging
 static float theta = 0.0f;                  // needle angle relative to north
@@ -48,6 +53,7 @@ static uint8_t p = 0;
 /* struct for readign data from sensor */
 static struct QMC5883L_mag_data data;
 
+//--------------------------------------------------------------------------------
 
 void compass_page_init(void)
 {
@@ -65,6 +71,8 @@ void compass_page_init(void)
 
     OLED_createLine(&needle_line_field, COMPASS_CENTRE_X, COMPASS_CENTRE_Y - 10, COMPASS_CENTRE_X, COMPASS_CENTRE_Y + 10);
 }
+
+//--------------------------------------------------------------------------------
 
 void compass_page_draw(void)
 {
@@ -112,6 +120,8 @@ void compass_page_draw(void)
     OLED_moveObject(w_text_field, COMPASS_CENTRE_X - LETTERS_RADIUS*sinf(theta - 3.0f/2.0f*PI) - LETTERS_OFFSET,
             COMPASS_CENTRE_Y - LETTERS_RADIUS*cosf(theta - 3.0f/2.0f*PI) - LETTERS_OFFSET);
 }
+
+//--------------------------------------------------------------------------------
 
 void compass_page_exit(void)
 {

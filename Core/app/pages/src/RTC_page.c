@@ -7,6 +7,8 @@
 
 #include "RTC_page.h"
 
+//--------------------------------------------------------------------------------
+
 #define BLINK_PERIOD 500        // blinking period of digits corresponding to values which are being changed
 
 #define YEAR_MIN_VAL    0
@@ -22,6 +24,8 @@
 #define SECONDS_MIN_VAL 0
 #define SECONDS_MAX_VAL 59
 
+//--------------------------------------------------------------------------------
+
 /* This enum defines order of choosing setups on button hold */
 enum RTC_page_data
 {
@@ -34,9 +38,14 @@ enum RTC_page_data
     Seconds,
     RTC_page_data_END
 };
+
+//--------------------------------------------------------------------------------
+
 /* HAL RTC structs  for data and time manipulation*/
 static RTC_TimeTypeDef time_s;
 static RTC_DateTypeDef date_s;
+
+//--------------------------------------------------------------------------------
 
 /* variables to store OLED objects IDs and printed strings */
 static uint8_t timeTextField = 0;
@@ -45,12 +54,15 @@ static char timeText[20];
 static uint8_t dateTextField = 0;
 static char dateText[20];
 
+//--------------------------------------------------------------------------------
+
 /* current setup indicator */
 static enum RTC_page_data set_time_date_counter = RTC_page_data_START;
 
 static void set_time_date_fun(void);
 static void increment_time_date_fun(void);
 
+//--------------------------------------------------------------------------------
 
 void RTC_page_init(void)
 {
@@ -60,6 +72,8 @@ void RTC_page_init(void)
     button_set_callback_press_function(increment_time_date_fun);
     button_set_callback_hold_function(set_time_date_fun);
 }
+
+//--------------------------------------------------------------------------------
 
 void RTC_page_draw(void)
 {
@@ -160,6 +174,8 @@ void RTC_page_draw(void)
     }
 }
 
+//--------------------------------------------------------------------------------
+
 void RTC_page_exit(void)
 {
     /* delete objects present on screen at this page */
@@ -168,6 +184,8 @@ void RTC_page_exit(void)
     OLED_deleteObject(dateTextField);
     OLED_deleteObject(timeTextField);
 }
+
+//--------------------------------------------------------------------------------
 
 /* These 2 functions are called once button is pressed or hold */
 static void set_time_date_fun(void)
@@ -179,6 +197,8 @@ static void set_time_date_fun(void)
         HAL_RTC_SetTime(&hrtc, &time_s, RTC_FORMAT_BIN);
     }
 }
+
+//--------------------------------------------------------------------------------
 
 static void increment_time_date_fun(void)
 {

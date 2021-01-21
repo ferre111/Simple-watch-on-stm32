@@ -9,6 +9,7 @@
 
 #include "OLED.h"
 #include "MPU6050.h"
+#include "images.h"
 
 
 

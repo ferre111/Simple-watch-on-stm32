@@ -19,7 +19,7 @@ void myI2C_Init()
     // I2C2 //
 
 
-    // PB11 and PB12 configuration for use with I2C2
+    // PB11 and PB10 configuration for use with I2C2
     GPIOB->CRH |= (0x3UL << GPIO_CRH_MODE11_Pos) | (0x3UL << GPIO_CRH_MODE10_Pos);      // PB11 and PB10 as fast mode outputs
     GPIOB->CRH |= (0x3UL << GPIO_CRH_CNF11_Pos) | (0x3UL << GPIO_CRH_CNF10_Pos);        // PB11 and PB10 as alternate function Open-Drain pins
 

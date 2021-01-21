@@ -49,6 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+/*Structure for initialization MPU6050.*/
 struct MPU6050_ctx ctx =
 {
     .sample_rate_div        = 255,
@@ -140,9 +141,6 @@ int main(void)
   pressure_sensor_read_calib_data();
 
   MPU6050_init(&ctx);
-
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
   OLED_Init();
   OLED_setDisplayOn();

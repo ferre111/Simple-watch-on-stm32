@@ -7,12 +7,18 @@
 
 #include "altitude_page.h"
 
+//--------------------------------------------------------------------------------
+
 #define AVR 10                                          //set count of sample to averaging initial pressure
 #define PRINT_ALT(alt) alt >= 0 ? "   %dm" : "  %dm"    // MACRO for formatting altitude string
+
+//--------------------------------------------------------------------------------
 
 static int32_t init_pres;                               // initial pressure measured at reset
 static int32_t actual_pres;
 static float alt;                                       // altitude
+
+//--------------------------------------------------------------------------------
 
 /* variables to store drawable object IDs and char arrays to store strings for TextFields */
 static uint8_t title_id;
@@ -22,6 +28,8 @@ static uint8_t line_id;
 
 static uint8_t data_id;
 static char data_txt[20];
+
+//--------------------------------------------------------------------------------
 
 void altitude_page_init(void)
 {
@@ -45,6 +53,8 @@ void altitude_page_init(void)
     init_pres /= AVR;
 }
 
+//--------------------------------------------------------------------------------
+
 void altitude_page_draw(void)
 {
     /* update text strings printed on display with data from pressure sensor */
@@ -53,6 +63,8 @@ void altitude_page_draw(void)
     pressure_sensor_calc_dif_alt(init_pres, actual_pres, &alt);
     snprintf(data_txt, 20, PRINT_ALT((int16_t)alt), (int16_t)alt);
 }
+
+//--------------------------------------------------------------------------------
 
 void altitude_page_exit(void)
 {

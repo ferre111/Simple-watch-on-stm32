@@ -8,6 +8,7 @@
 
 //----------------------------------------------------------------------
 
+/* Array of structure with pointer to functions associate with appropriate page*/
 struct page page_tab1[menu_pages_END] =
 {
     [RTC_page]          = {.init_fun = RTC_page_init,           .draw_fun = RTC_page_draw,          .exit_fun = RTC_page_exit},
@@ -45,14 +46,14 @@ void menu_set_prev_page_flag(void)
 
 void menu_process_init(void)
 {
-    ctx.page_tab[ctx.page].init_fun();
+    ctx.page_tab[ctx.page].init_fun();  //init first page
 }
 
 //----------------------------------------------------------------------
 
 void menu_process(void)
 {
-    draw_current_page();
+    draw_current_page();    //draw actual set page
     check_page_flag();
 }
 
@@ -71,14 +72,14 @@ static void check_page_flag(void)
 
     if(ctx.next_page_flag)
     {
-        if((HAL_GetTick() - timestamp) > TIME_BETWEEN_PAGE_CHANGE)
+        if((HAL_GetTick() - timestamp) > TIME_BETWEEN_PAGE_CHANGE)              //if next_page_flag is set and time between previous page change and current flag set is greater than TIME_BETWEEN_PAGE_CHANGE then change page to next page
         {
-            ctx.page_tab[ctx.page].exit_fun();
+            ctx.page_tab[ctx.page].exit_fun();                                  //execute function to deinit page
 
-            if(++ctx.page == menu_pages_END) ctx.page = menu_pages_START + 1;
-            timestamp = HAL_GetTick();
+            if(++ctx.page == menu_pages_END) ctx.page = menu_pages_START + 1;   //increment page
+            timestamp = HAL_GetTick();                                          //get new timestamp
 
-            ctx.page_tab[ctx.page].init_fun();
+            ctx.page_tab[ctx.page].init_fun();                                  //execute function to init new page
         }
 
         ctx.next_page_flag = false;
@@ -86,14 +87,14 @@ static void check_page_flag(void)
 
     if(ctx.prev_page_flag)
     {
-        if((HAL_GetTick() - timestamp) > TIME_BETWEEN_PAGE_CHANGE)
+        if((HAL_GetTick() - timestamp) > TIME_BETWEEN_PAGE_CHANGE)               //if prev_page_flag is set and time between previous page change and current flag set is greater than TIME_BETWEEN_PAGE_CHANGE then change page to previous page
         {
-            ctx.page_tab[ctx.page].exit_fun();
+            ctx.page_tab[ctx.page].exit_fun();                                  //execute function to deinit page
 
-            if(--ctx.page == menu_pages_START) ctx.page = menu_pages_END - 1;
-            timestamp = HAL_GetTick();
+            if(--ctx.page == menu_pages_START) ctx.page = menu_pages_END - 1;   //increment page
+            timestamp = HAL_GetTick();                                          //get new timestamp
 
-            ctx.page_tab[ctx.page].init_fun();
+            ctx.page_tab[ctx.page].init_fun();                                  //execute function to init new page
         }
 
         ctx.prev_page_flag = false;
