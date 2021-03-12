@@ -17,3 +17,6 @@ List of sensors:
 - MPU6050 (GY-87)
 - BMP180 (GY-87)
 - QMC5883L (GY-87)
+
+A video that showing how the watch works:
+https://www.youtube.com/watch?v=Y_Tc-Hr1YcA
