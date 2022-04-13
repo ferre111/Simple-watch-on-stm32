@@ -116,6 +116,10 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=SVPSQNMT
 
+[Parameter1]
+Name==Title
+Value=Clever watch
+
 [Configuration1]
 Name=Sources
 ParameterCount=0
@@ -1043,8 +1047,8 @@ UpdateToLatestRevision=1
 PartTypes=0
 ComponentLibIdentifierKind0=Library Name And Type
 ComponentLibraryIdentifier0=clever_watch.SchLib
-ComponentDesignItemID0=MOUNTING_HOLE
-ComponentSymbolReference0=MOUNTING_HOLE
+ComponentDesignItemID0=D_DOUBLE_CK2
+ComponentSymbolReference0=D_DOUBLE_CK2
 ComponentUpdate0=1
 ComponentIsDeviceSheet0=0
 FullReplace=1
