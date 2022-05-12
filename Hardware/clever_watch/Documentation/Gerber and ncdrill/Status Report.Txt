@@ -1,0 +1,13 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : PCB Document [clever_watch.PcbDoc]
+   Generated File[clever_watch-RoundHoles.TXT]
+   Generated File[clever_watch-SlotHoles.TXT]
+   Generated File[clever_watch.LDP]
+   Generated File[clever_watch.DRR]
+
+
+Files Generated   : 4
+Documents Printed : 0
+
+Finished Output Generation At 9:05:44 PM On 5/12/2022
