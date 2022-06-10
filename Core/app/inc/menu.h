@@ -22,7 +22,8 @@
 //----------------------------------------------------------------------
 
 #define TIME_BETWEEN_PAGE_CHANGE    500 //in ms
-#define GYRO_REG_VAL_TO_CHANGE_PAGE 15360
+//#define GYRO_REG_VAL_TO_CHANGE_PAGE 15360
+#define GYRO_REG_VAL_TO_CHANGE_PAGE 2137
 
 //----------------------------------------------------------------------
 

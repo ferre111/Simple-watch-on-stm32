@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
-#include "myI2C.h"
+#include "i2c.h"
 #include "stdbool.h"
 #include "main.h"
 #include "QMC5883L.h"

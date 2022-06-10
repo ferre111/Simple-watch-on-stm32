@@ -2,7 +2,7 @@
 
 #define ADDR 0xD0
 
-#define I2C_HANDLE I2C1
+#define I2C_HANDLE hi2c2
 
 //----------------------------------------------------------------------
 
@@ -119,59 +119,77 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
     ctx = *tmp_ctx;
 
     aux_val = ctx.clock_select;
-    myI2C_writeByte(I2C_HANDLE, ADDR, PWR_MGMT_1, aux_val); //turn on device, select clk
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_val, 1, HAL_MAX_DELAY);
+    // myI2C_writeByte(I2C_HANDLE, ADDR, PWR_MGMT_1, aux_val); //turn on device, select clk
 
     /* init QMC5883L */
     aux_val = (1 << 1);
-    myI2C_writeByte(I2C_HANDLE, ADDR, INT_PIN_CFG, aux_val); //I2C bypass enable
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_PIN_CFG, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, INT_PIN_CFG, aux_val); //I2C bypass enable
 
     aux_val = (1 << 7);
-    myI2C_writeByte(I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG_2, aux_val); //soft reset
+    HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG_2, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG_2, aux_val); //soft reset
     HAL_Delay(10);
 
     aux_val = 1;
-    myI2C_writeByte(I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, aux_val); //restart period
+    HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, QMC588L_ADDR, QMC588L_FBR, aux_val); //restart period
 
     aux_val = ctx.QMC5883L_ctx.mode | (ctx.QMC5883L_ctx.output_data_rate << 2) | (ctx.QMC5883L_ctx.full_scale << 4) | (ctx.QMC5883L_ctx.over_sample_ratio << 6);
-    myI2C_writeByte(I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG_1, aux_val); //send settings for QMC5883L
+    HAL_I2C_Mem_Write(&I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG_1, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, QMC588L_ADDR, QMC588L_MODE_REG_1, aux_val); //send settings for QMC5883L
 
     aux_val = ctx.sample_rate_div - 1;
-    myI2C_writeByte(I2C_HANDLE, ADDR, SMPLRT_DIV, aux_val);   //set sample rate divider
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, SMPLRT_DIV, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, SMPLRT_DIV, aux_val);   //set sample rate divider
 
-    myI2C_writeByte(I2C_HANDLE, ADDR, CONFIG, ctx.dlpf_acc_bandwidth);   //set DLPF
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, CONFIG, 1, (uint8_t *)&ctx.dlpf_acc_bandwidth, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, CONFIG, ctx.dlpf_acc_bandwidth);   //set DLPF
 
-    myI2C_writeByte(I2C_HANDLE, ADDR, GYRO_CONFIG, ctx.gyro_full_scale_range);   //set gyro range
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, GYRO_CONFIG, 1, (uint8_t *)&ctx.gyro_full_scale_range, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, GYRO_CONFIG, ctx.gyro_full_scale_range);   //set gyro range
 
-    myI2C_writeByte(I2C_HANDLE, ADDR, ACCEL_CONFIG, ctx.acc_full_scale_range);   //set acc range
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, ACCEL_CONFIG, 1, (uint8_t *)&ctx.acc_full_scale_range, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, ACCEL_CONFIG, ctx.acc_full_scale_range);   //set acc range
 
-    myI2C_writeByte(I2C_HANDLE, ADDR, FIFO_EN, ctx.fifo_data_enable_mask);       //enable data that will be storage in FIFO
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, FIFO_EN, 1, &ctx.fifo_data_enable_mask, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, FIFO_EN, ctx.fifo_data_enable_mask);       //enable data that will be storage in FIFO
 
     aux_val = ctx.master.master_clock_speed | (ctx.master.mst_p_nsr << 4) | (ctx.master.slave3_fifo_en << 5) | (ctx.master.wait_for_es << 6) | (ctx.master.mult_mst_en << 7);
-    myI2C_writeByte(I2C_HANDLE, ADDR, I2C_MST_CTRL, aux_val);   //setup master control register
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_MST_CTRL, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, I2C_MST_CTRL, aux_val);   //setup master control register
 
     if(ctx.master.slave_delay) //set sample rate for slaves
     {
-        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV4_CTRL, ctx.master.slave_delay);
+    	HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV4_CTRL, 1, &ctx.master.slave_delay, 1, HAL_MAX_DELAY);
+//        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV4_CTRL, ctx.master.slave_delay);
 
         aux_val = (1 << 7) | ctx.master.slave_delay_mask;
-        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_MST_DELAY_CTRL, aux_val);
+        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_MST_DELAY_CTRL, 1, &aux_val, 1, HAL_MAX_DELAY);
+//        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_MST_DELAY_CTRL, aux_val);
     }
 
     for(uint8_t i = 0; i < AMOUNT_OF_SLAVES; i++)   //set all slaves
     {
         aux_val = (ctx.slave[i].addr >> 1) | (ctx.slave[i].RW << 7);
-        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV0_ADDR + 3*i, aux_val);    //set slave address
+        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_ADDR + 3*i, 1, &aux_val, 1, HAL_MAX_DELAY);
+//        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV0_ADDR + 3*i, aux_val);    //set slave address
 
-        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV0_REG + 3*i, ctx.slave[i].reg_addr);   //set slave register address
+        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_REG + 3*i, 1, &ctx.slave[i].reg_addr, 1, HAL_MAX_DELAY);
+//        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV0_REG + 3*i, ctx.slave[i].reg_addr);   //set slave register address
 
         aux_val = ctx.slave[i].len | (ctx.slave[i].group << 4) | (ctx.slave[i].reg_dis << 5) | (ctx.slave[i].byte_swap << 6) | (ctx.slave[i].en << 7);
-        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV0_CTRL + 3*i, aux_val);    //set other settings for slave
+        HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, I2C_SLV0_CTRL + 3*i, 1, &aux_val, 1, HAL_MAX_DELAY);
+//        myI2C_writeByte(I2C_HANDLE, ADDR, I2C_SLV0_CTRL + 3*i, aux_val);    //set other settings for slave
     }
 
     aux_val = (ctx.i2c_bypass_en << 1) | (ctx.fsync_int_en << 2) | (ctx.fsync_int_level << 3) | (ctx.int_pin.rd_clear << 4) | (ctx.int_pin.latch_en << 5) | (ctx.int_pin.open << 6) | (ctx.int_pin.level << 7);
-    myI2C_writeByte(I2C_HANDLE, ADDR, INT_PIN_CFG, aux_val);    //setup MPU6050 pin for generate interrupt
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_PIN_CFG, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, INT_PIN_CFG, aux_val);    //setup MPU6050 pin for generate interrupt
 
-    myI2C_writeByte(I2C_HANDLE, ADDR, INT_ENABLE, ctx.interrupt_en_mask);   //set when interrupt should happen
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, INT_ENABLE, 1, &ctx.interrupt_en_mask, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, INT_ENABLE, ctx.interrupt_en_mask);   //set when interrupt should happen
 
     /*prepare dynamic allocated array for data from FIFO*/
     prepare_dynamic_array();
@@ -182,7 +200,8 @@ void MPU6050_init(struct MPU6050_ctx *tmp_ctx)
     set_sensitivity();
 
     aux_val = (ctx.i2c_mst_en << 5) | (ctx.fifo_en << 6);
-    myI2C_writeByte(I2C_HANDLE, ADDR, USER_CTRL, aux_val);  //enable master mode on auxiliary I2C and enable FIFO
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, USER_CTRL, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, USER_CTRL, aux_val);  //enable master mode on auxiliary I2C and enable FIFO
 }
 
 //----------------------------------------------------------------------
@@ -191,14 +210,16 @@ void MPU6050_deinit(void)
 {
     //MPU6050 reset
     aux_val = 1 << 7;
-    myI2C_writeByte(I2C_HANDLE, ADDR, PWR_MGMT_1, aux_val);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, PWR_MGMT_1, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, PWR_MGMT_1, aux_val);
 
     free(MPU6050_data); //deallocate array for FIFO
 
     //auxiliary I2C reset
     HAL_Delay(10);
     aux_val = 1 << 1;
-    myI2C_writeByte(I2C_HANDLE, ADDR, USER_CTRL, aux_val);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, USER_CTRL, 1, &aux_val, 1, HAL_MAX_DELAY);
+//    myI2C_writeByte(I2C_HANDLE, ADDR, USER_CTRL, aux_val);
 }
 
 //----------------------------------------------------------------------
@@ -207,8 +228,10 @@ static void read_data(void)
 {
     uint16_t size;
     /*Check how many data is in FIFO*/
-    myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_COUNTH, (uint8_t*)&size + 1, 1);
-    myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_COUNTL, (uint8_t*)&size, 1);
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTH, 1, (uint8_t*)&size + 1, 1, HAL_MAX_DELAY);
+//    myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_COUNTH, (uint8_t*)&size + 1, 1);
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_COUNTL, 1, (uint8_t*)&size, 1, HAL_MAX_DELAY);
+//    myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_COUNTL, (uint8_t*)&size, 1);
 
     for(uint16_t i = 0; i < size; i++)  //read all data in FIFO
     {
@@ -219,7 +242,8 @@ static void read_data(void)
             tmp -= count_of_data_byte;
         }
 
-        myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_R_W, &MPU6050_data[tmp], 1);
+        HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, FIFO_R_W, 1, &MPU6050_data[tmp], 1, HAL_MAX_DELAY);
+//        myI2C_readByteStream(I2C_HANDLE, ADDR, FIFO_R_W, &MPU6050_data[tmp], 1);
         tmp++;
     }
 
@@ -279,8 +303,8 @@ void QMC5883L_process(void)
 void QMC5883L_EXTI_handler(void)
 {
     uint8_t tmp = 0;
-
-    myI2C_readByteStream(I2C_HANDLE, ADDR, INT_STATUS, &tmp, 1);    //read register with data what event bring interrupt
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, INT_STATUS, 1, &tmp, 1, HAL_MAX_DELAY);
+//    myI2C_readByteStream(I2C_HANDLE, ADDR, INT_STATUS, &tmp, 1);    //read register with data what event bring interrupt
 
     if(tmp & MPU6050_INT_DATA_RDY_EN)
     {

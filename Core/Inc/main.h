@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2022 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -58,12 +58,19 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BUTTON_Pin GPIO_PIN_14
-#define BUTTON_GPIO_Port GPIOC
-#define BUTTON_EXTI_IRQn EXTI15_10_IRQn
-#define INTA_Pin GPIO_PIN_9
-#define INTA_GPIO_Port GPIOB
+#define BUTTON_Pin GPIO_PIN_1
+#define BUTTON_GPIO_Port GPIOA
+#define MCU_PWR_EN_Pin GPIO_PIN_2
+#define MCU_PWR_EN_GPIO_Port GPIOA
+#define VBAT_MEAS_Pin GPIO_PIN_6
+#define VBAT_MEAS_GPIO_Port GPIOA
+#define INTA_Pin GPIO_PIN_8
+#define INTA_GPIO_Port GPIOA
 #define INTA_EXTI_IRQn EXTI9_5_IRQn
+#define FSYNC_Pin GPIO_PIN_12
+#define FSYNC_GPIO_Port GPIOA
+#define BUZZER_Pin GPIO_PIN_7
+#define BUZZER_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

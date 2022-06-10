@@ -5,7 +5,7 @@
  *      Author: Wiktor Lechowicz
  */
 #include "OLED.h"
-#include "myI2C.h"
+#include "i2c.h"
 #include "ascii_font.h"
 
 //---------------------------------------------------------------------------------------
@@ -13,7 +13,7 @@
 #define OLED_ADDRESS                            0b01111000
 
 // Control byte options
-#define OLED_CONTROL_BYTE_                  0b00000000
+#define OLED_CONTROL_BYTE_                  	0b00000000
     #define _OLED_SINGLE_BYTE                   0b10000000
     #define _OLED_MULTIPLE_BYTES                0b00000000
     #define _OLED_COMMAND                       0b00000000
@@ -181,21 +181,17 @@ oled_t oled;
 /*send single command to driver*/
 static void sendCommand(uint8_t command)
 {
-    // wait until end of display buffer transmission
+//     wait until end of display buffer transmission
 //    while(__HAL_I2C_GET_FLAG(&hi2c2, I2C_FLAG_BUSY)){
 //        __NOP();
 //    }
-//    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
-
-    myI2C_writeByte(OLED_I2C, OLED_ADDRESS, 0x00, command);
+    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
 }
 
 /* send stream of commands to driver */
 static void sendCommandStream(const uint8_t stream[], uint8_t streamLength)
 {
-    //HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x01, 1, stream, streamLength, HAL_MAX_DELAY);
-
-    myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, 0x01, stream, streamLength);
+    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x01, 1, stream, streamLength, HAL_MAX_DELAY);
 }
 
 /* set next column pointer in display driver */
@@ -205,10 +201,10 @@ static void setAddress(uint8_t page, uint8_t column)
     oled.addressArray[1] = column & 0x0F;
     oled.addressArray[2] = 0x10 | ((0xF0 & column) >> 4);
 
-//    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, 1,
-//            oled.addressArray, 3, HAL_MAX_DELAY);
+    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, 1,
+            oled.addressArray, 3, HAL_MAX_DELAY);
 
-    myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, oled.addressArray, 3);
+//    myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, oled.addressArray, 3);
 }
 
 /* MACRO to set single pixel in buffer */
@@ -540,11 +536,14 @@ void OLED_update()
     }
 
     /* send updated buffer to OLED */
-    while(oled.pagetoSend != 0);
-    setAddress(0 , 0);
-    oled.pagetoSend = 1;
-    myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
-                        (uint8_t * )(oled.currentBuffer), 128);
+//    while(oled.pagetoSend != 0);
+//    oled.pagetoSend = 1;
+    for(uint8_t i = 0U; i < 8; i++) {
+    	setAddress(i , 0);
+    	HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES, 1, (uint8_t *)(oled.currentBuffer + i*128), 128, HAL_MAX_DELAY);
+    }
+//    myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
+//                        (uint8_t * )(oled.currentBuffer), 128);
 }
 
 void OLED_setDisplayOn()
@@ -662,38 +661,38 @@ void OLED_createImage(uint8_t * id, uint8_t x0, uint8_t y0, const uint8_t * imag
     oled.drawables[*id].spec.image.imageArray = imageArray;
 }
 
-void DMA1_Channel4_IRQHandler(void)
-{
-    if(DMA1->ISR & DMA_ISR_TCIF4)
-    {
-        // disable DMA1 CH4 TC interrupt
-        DMA1_Channel4->CCR &= ~DMA_CCR_TCIE;
-
-        // clear TCI flag
-        DMA1->IFCR |= DMA_IFCR_CTCIF4;
-
-        // set I2C2 stop condition
-        I2C2->CR1 |= I2C_CR1_STOP;
-
-        if(oled.pagetoSend <= 7)
-        {
-            setAddress(oled.pagetoSend , 0);
-
-            myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
-                                ((uint8_t * )(oled.currentBuffer) + oled.pagetoSend*128), 128);
-            oled.pagetoSend++;
-
-        } else
-        {
-            // swap buffers
-            if(oled.currentBuffer == oled.firstBuffer)
-            {
-                oled.currentBuffer = oled.secondBufffer;
-            } else
-            {
-                oled.currentBuffer = oled.firstBuffer;
-            }
-            oled.pagetoSend = 0;
-        }
-    }
-}
+//void DMA1_Channel4_IRQHandler(void)
+//{
+//    if(DMA1->ISR & DMA_ISR_TCIF4)
+//    {
+//        // disable DMA1 CH4 TC interrupt
+//        DMA1_Channel4->CCR &= ~DMA_CCR_TCIE;
+//
+//        // clear TCI flag
+//        DMA1->IFCR |= DMA_IFCR_CTCIF4;
+//
+//        // set I2C2 stop condition
+//        I2C2->CR1 |= I2C_CR1_STOP;
+//
+//        if(oled.pagetoSend <= 7)
+//        {
+//            setAddress(oled.pagetoSend , 0);
+//
+//            myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
+//                                ((uint8_t * )(oled.currentBuffer) + oled.pagetoSend*128), 128);
+//            oled.pagetoSend++;
+//
+//        } else
+//        {
+//            // swap buffers
+//            if(oled.currentBuffer == oled.firstBuffer)
+//            {
+//                oled.currentBuffer = oled.secondBufffer;
+//            } else
+//            {
+//                oled.currentBuffer = oled.firstBuffer;
+//            }
+//            oled.pagetoSend = 0;
+//        }
+//    }
+//}

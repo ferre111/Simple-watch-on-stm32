@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "main.h"
-#include "myI2C.h"
+#include "i2c.h"
 
 #define PRESSUURE_SENSOR_ADDR 0xEE
 

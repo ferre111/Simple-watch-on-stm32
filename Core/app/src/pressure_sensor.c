@@ -10,7 +10,7 @@
 #define ADDR PRESSUURE_SENSOR_ADDR
 #define COUNT_OF_CALIB_REG 11
 
-#define I2C_HANDLE I2C1
+#define I2C_HANDLE hi2c2
 
 #define OUT_XLSB    0xF8
 #define OUT_LSB     0xF7
@@ -96,7 +96,8 @@ void pressure_sensor_read_calib_data(void)
     /*Reading of calibration data*/
     for(uint8_t i = 0; i < COUNT_OF_CALIB_REG; i++)
     {
-        myI2C_readByteStream(I2C_HANDLE, ADDR, CALIB0 + i * 2, aux_tab, 2);
+    	HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, CALIB0 + i * 2, 1, aux_tab, 2, HAL_MAX_DELAY);
+//        myI2C_readByteStream(I2C_HANDLE, ADDR, CALIB0 + i * 2, aux_tab, 2);
         *(&ctx.calib_data.AC1 + i) = (aux_tab[0] << 8) + aux_tab[1];
     }
 }
@@ -148,10 +149,12 @@ static void read_uncomp_temp(void)
 {
     /*Write proper value to measurement control register*/
     aux_tab[0] = 0x2E;
-    myI2C_writeByteStream(I2C_HANDLE, ADDR, CTRL_MEAS, aux_tab, 1);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, CTRL_MEAS, 1, aux_tab, 1, HAL_MAX_DELAY);
+//    myI2C_writeByteStream(I2C_HANDLE, ADDR, CTRL_MEAS, aux_tab, 1);
     HAL_Delay(5);
 
-    myI2C_readByteStream(I2C_HANDLE, ADDR, OUT_MSB, aux_tab, 2);
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, OUT_MSB, 1, aux_tab, 2, HAL_MAX_DELAY);
+//    myI2C_readByteStream(I2C_HANDLE, ADDR, OUT_MSB, aux_tab, 2);
 
     ctx.temp.uncomp_temp = (aux_tab[0] << 8) + aux_tab[1];
 }
@@ -162,7 +165,8 @@ static void read_uncomp_pres(void)
 {
     /*Write proper value to measurement control register*/
     aux_tab[0] = 0x34 + (ctx.mode << 6);
-    myI2C_writeByteStream(I2C_HANDLE, ADDR, CTRL_MEAS, aux_tab, 1);
+    HAL_I2C_Mem_Write(&I2C_HANDLE, ADDR, CTRL_MEAS, 1, aux_tab, 1, HAL_MAX_DELAY);
+//    myI2C_writeByteStream(I2C_HANDLE, ADDR, CTRL_MEAS, aux_tab, 1);
 
     /*Choose correct delay.*/
     switch(ctx.mode)
@@ -183,7 +187,8 @@ static void read_uncomp_pres(void)
         break;
     }
 
-    myI2C_readByteStream(I2C_HANDLE, ADDR, OUT_MSB, aux_tab, 3);
+    HAL_I2C_Mem_Read(&I2C_HANDLE, ADDR, OUT_MSB, 1, aux_tab, 3, HAL_MAX_DELAY);
+//    myI2C_readByteStream(I2C_HANDLE, ADDR, OUT_MSB, aux_tab, 3);
 
     ctx.uncomp_pres = ((aux_tab[0] << 16) + (aux_tab[1] << 8) + aux_tab[2]) >> (8 - ctx.mode);
 }
