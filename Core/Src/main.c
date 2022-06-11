@@ -134,9 +134,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_RTC_Init();
   MX_I2C2_Init();
   MX_ADC1_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   MPU6050_deinit();
   HAL_Delay(50);
@@ -148,6 +148,7 @@ int main(void)
   OLED_Init();
   OLED_setDisplayOn();
   menu_process_init();
+  HAL_GPIO_WritePin(MCU_PWR_EN_GPIO_Port, MCU_PWR_EN_Pin, true);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -244,4 +245,3 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

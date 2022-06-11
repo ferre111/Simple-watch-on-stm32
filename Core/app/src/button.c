@@ -40,7 +40,7 @@ void button_process(void)
 
 void button_EXTI_handler(void)
 {
-    ctx.actual_pin_state =  HAL_GPIO_ReadPin(ctx.port, ctx.pin);
+    ctx.actual_pin_state = !HAL_GPIO_ReadPin(ctx.port, ctx.pin);
 
     if(ctx.actual_pin_state == false)
     {

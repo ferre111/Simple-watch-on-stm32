@@ -58,8 +58,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BUTTON_Pin GPIO_PIN_1
-#define BUTTON_GPIO_Port GPIOA
+#define BUTTON_Pin GPIO_PIN_13
+#define BUTTON_GPIO_Port GPIOC
+#define BUTTON_EXTI_IRQn EXTI15_10_IRQn
 #define MCU_PWR_EN_Pin GPIO_PIN_2
 #define MCU_PWR_EN_GPIO_Port GPIOA
 #define VBAT_MEAS_Pin GPIO_PIN_6
@@ -80,5 +81,3 @@ void Error_Handler(void);
 #endif
 
 #endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
