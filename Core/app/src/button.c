@@ -6,6 +6,11 @@
  */
 
 #include "button.h"
+#include "OLED.h"
+#include "MPU6050.h"
+#include "main.h"
+
+extern void SystemClock_Config(void);
 
 //--------------------------------------------------------------------------------
 
@@ -62,9 +67,6 @@ void button_EXTI_handler(void)
 void blank_fun(void)
 {
     __NOP();
-//    static bool flag;
-//    HAL_GPIO_WritePin(TEST_LED_GPIO_Port, TEST_LED_Pin, flag);
-//    flag ^= 1;
 }
 
 //--------------------------------------------------------------------------------
@@ -73,15 +75,28 @@ static void button_do_button_fun(void)
 {
     if(ctx.press == true)
     {
-        if(ctx.actual_pin_state == true)
+    	if ((HAL_GetTick() - ctx.start_press_time) > BUTTON_KILL_TIME && ctx.actual_pin_state == true)
+    	{
+    		OLED_setDisplayOff();
+    		MPU6050_sleep();
+			ctx.press = false;
+			HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+    		HAL_Delay(100);
+    		HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+    		SystemClock_Config();
+    		OLED_setDisplayOn();
+			MPU6050_init(&MPU6050);
+			HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+    	}
+        else if(((HAL_GetTick() - ctx.start_press_time) > BUTTON_HOLD_TIME) && ctx.actual_pin_state == true)
         {
-            ctx.press = false;
-            ctx.press_button_fun();
-        }
-        else if((HAL_GetTick() - ctx.start_press_time) > BUTTON_HOLD_TIME)
-        {
-            ctx.press = false;
             ctx.hold_button_fun();
+			ctx.press = false;
+        }
+        else if(ctx.actual_pin_state == true)
+        {
+            ctx.press_button_fun();
+			ctx.press = false;
         }
     }
 }

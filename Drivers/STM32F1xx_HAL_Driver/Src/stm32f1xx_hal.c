@@ -373,7 +373,7 @@ __weak void HAL_Delay(uint32_t Delay)
   uint32_t wait = Delay;
 
   /* Add a freq to guarantee minimum wait */
-  if (wait < HAL_MAX_DELAY)
+  if (wait < MPU6050_I2C_TIMEOUT)
   {
     wait += (uint32_t)(uwTickFreq);
   }

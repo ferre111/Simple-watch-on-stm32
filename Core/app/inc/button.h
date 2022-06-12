@@ -14,6 +14,7 @@
 
 #define BUTTON_DEBOUNCE_TIME 20
 #define BUTTON_HOLD_TIME     1000
+#define BUTTON_KILL_TIME     5000
 
 //--------------------------------------------------------------------------------
 

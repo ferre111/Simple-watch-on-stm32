@@ -425,7 +425,7 @@ HAL_StatusTypeDef HAL_ADCEx_InjectedPollForConversion(ADC_HandleTypeDef* hadc, u
     while(HAL_IS_BIT_CLR(hadc->Instance->SR, ADC_FLAG_JEOC))
     {
       /* Check if timeout is disabled (set to infinite wait) */
-      if(Timeout != HAL_MAX_DELAY)
+      if(Timeout != MPU6050_I2C_TIMEOUT)
       {
         if((Timeout == 0U) || ((HAL_GetTick() - tickstart ) > Timeout))
         {
@@ -457,7 +457,7 @@ HAL_StatusTypeDef HAL_ADCEx_InjectedPollForConversion(ADC_HandleTypeDef* hadc, u
     while(Conversion_Timeout_CPU_cycles < Conversion_Timeout_CPU_cycles_max)
     {
       /* Check if timeout is disabled (set to infinite wait) */
-      if(Timeout != HAL_MAX_DELAY)
+      if(Timeout != MPU6050_I2C_TIMEOUT)
       {
         if((Timeout == 0)||((HAL_GetTick() - tickstart ) > Timeout))
         {

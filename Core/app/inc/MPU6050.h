@@ -230,6 +230,13 @@ struct MPU6050_gyro_data
 void MPU6050_init(struct MPU6050_ctx *tmp_ctx);
 
 //----------------------------------------------------------------------
+
+/*
+ * @brief   Put MPU6050 in sleep mode.
+ */
+void MPU6050_sleep(void);
+
+//----------------------------------------------------------------------
 /*
  * @brief   Reset MPU6050.
  */

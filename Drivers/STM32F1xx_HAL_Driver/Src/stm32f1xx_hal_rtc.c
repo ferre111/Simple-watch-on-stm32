@@ -1461,7 +1461,7 @@ HAL_StatusTypeDef HAL_RTC_PollForAlarmAEvent(RTC_HandleTypeDef *hrtc, uint32_t T
 
   while (__HAL_RTC_ALARM_GET_FLAG(hrtc, RTC_FLAG_ALRAF) == RESET)
   {
-    if (Timeout != HAL_MAX_DELAY)
+    if (Timeout != MPU6050_I2C_TIMEOUT)
     {
       if ((Timeout == 0) || ((HAL_GetTick() - tickstart) > Timeout))
       {

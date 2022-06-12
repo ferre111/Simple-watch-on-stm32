@@ -7292,7 +7292,7 @@ static HAL_StatusTypeDef I2C_WaitOnFlagUntilTimeout(I2C_HandleTypeDef *hi2c, uin
   while (__HAL_I2C_GET_FLAG(hi2c, Flag) == Status)
   {
     /* Check for the Timeout */
-    if (Timeout != HAL_MAX_DELAY)
+    if (Timeout != MPU6050_I2C_TIMEOUT)
     {
       if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
       {
@@ -7344,7 +7344,7 @@ static HAL_StatusTypeDef I2C_WaitOnMasterAddressFlagUntilTimeout(I2C_HandleTypeD
     }
 
     /* Check for the Timeout */
-    if (Timeout != HAL_MAX_DELAY)
+    if (Timeout != MPU6050_I2C_TIMEOUT)
     {
       if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
       {
@@ -7382,7 +7382,7 @@ static HAL_StatusTypeDef I2C_WaitOnTXEFlagUntilTimeout(I2C_HandleTypeDef *hi2c, 
     }
 
     /* Check for the Timeout */
-    if (Timeout != HAL_MAX_DELAY)
+    if (Timeout != MPU6050_I2C_TIMEOUT)
     {
       if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
       {
@@ -7420,7 +7420,7 @@ static HAL_StatusTypeDef I2C_WaitOnBTFFlagUntilTimeout(I2C_HandleTypeDef *hi2c, 
     }
 
     /* Check for the Timeout */
-    if (Timeout != HAL_MAX_DELAY)
+    if (Timeout != MPU6050_I2C_TIMEOUT)
     {
       if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
       {

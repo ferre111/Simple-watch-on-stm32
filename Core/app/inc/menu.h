@@ -23,7 +23,7 @@
 
 #define TIME_BETWEEN_PAGE_CHANGE    500 //in ms
 //#define GYRO_REG_VAL_TO_CHANGE_PAGE 15360
-#define GYRO_REG_VAL_TO_CHANGE_PAGE 15360
+#define GYRO_REG_VAL_TO_CHANGE_PAGE 3000
 
 //----------------------------------------------------------------------
 
@@ -72,6 +72,10 @@ struct menu_ctx
 
 //----------------------------------------------------------------------
 
+extern struct MPU6050_ctx MPU6050;
+
+//----------------------------------------------------------------------
+
 void menu_process_init(void);
 
 //----------------------------------------------------------------------
@@ -88,3 +92,4 @@ void menu_set_next_page_flag(void);
 //----------------------------------------------------------------------
 
 void menu_set_prev_page_flag(void);
+

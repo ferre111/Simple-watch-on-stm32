@@ -7,6 +7,7 @@
 #include "OLED.h"
 #include "i2c.h"
 #include "ascii_font.h"
+#include "MPU6050.h"
 
 //---------------------------------------------------------------------------------------
 // DEFINES
@@ -29,6 +30,7 @@
 #define OLED_CMD_SetDisplayOFF                      0xAE
 #define OLED_CMD_EnableChargePumpDuringDisplay      0x8D
 
+#define OLED_I2C_TIMEOUT 100
 
 //---------------------------------------------------------------------------------------
 // INIT BYTE STREAM
@@ -185,13 +187,13 @@ static void sendCommand(uint8_t command)
 //    while(__HAL_I2C_GET_FLAG(&hi2c2, I2C_FLAG_BUSY)){
 //        __NOP();
 //    }
-    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
+    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x00, 1, &command, 1, OLED_I2C_TIMEOUT);
 }
 
 /* send stream of commands to driver */
 static void sendCommandStream(const uint8_t stream[], uint8_t streamLength)
 {
-    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x01, 1, stream, streamLength, HAL_MAX_DELAY);
+    HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, 0x01, 1, stream, streamLength, OLED_I2C_TIMEOUT);
 }
 
 /* set next column pointer in display driver */
@@ -202,7 +204,7 @@ static void setAddress(uint8_t page, uint8_t column)
     oled.addressArray[2] = 0x10 | ((0xF0 & column) >> 4);
 
     HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, 1,
-            oled.addressArray, 3, HAL_MAX_DELAY);
+            oled.addressArray, 3, OLED_I2C_TIMEOUT);
 
 //    myI2C_writeByteStream(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_COMMAND | _OLED_MULTIPLE_BYTES, oled.addressArray, 3);
 }
@@ -538,9 +540,15 @@ void OLED_update()
     /* send updated buffer to OLED */
 //    while(oled.pagetoSend != 0);
 //    oled.pagetoSend = 1;
+//    for(uint8_t i = 0U; i < 16; i++) {
+//    	setAddress(i / 2, (i % 2) ? 64 : 0);
+//    	HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES, 1, (uint8_t *)(oled.currentBuffer + i * 64), 64, HAL_MAX_DELAY);
+//    	QMC5883L_process();
+//    }
     for(uint8_t i = 0U; i < 8; i++) {
-    	setAddress(i , 0);
-    	HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES, 1, (uint8_t *)(oled.currentBuffer + i*128), 128, HAL_MAX_DELAY);
+    	setAddress(i, 0);
+    	HAL_I2C_Mem_Write(&OLED_I2C_HANDLE, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES, 1, (uint8_t *)(oled.currentBuffer + i * 128), 128, OLED_I2C_TIMEOUT);
+//    	QMC5883L_process();
     }
 //    myI2C_writeByteStreamDMA(OLED_I2C, OLED_ADDRESS, OLED_CONTROL_BYTE_ | _OLED_DATA | _OLED_MULTIPLE_BYTES,
 //                        (uint8_t * )(oled.currentBuffer), 128);

@@ -22,6 +22,7 @@
 #include "adc.h"
 #include "i2c.h"
 #include "rtc.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -52,7 +53,7 @@
 
 /* USER CODE BEGIN PV */
 /*Structure for initialization MPU6050.*/
-struct MPU6050_ctx ctx =
+struct MPU6050_ctx MPU6050 =
 {
     .sample_rate_div        = 255,
     .dlpf_acc_bandwidth     = MPU6050_BANDWIDTH_260,
@@ -137,28 +138,31 @@ int main(void)
   MX_I2C2_Init();
   MX_ADC1_Init();
   MX_RTC_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   MPU6050_deinit();
   HAL_Delay(50);
   pressure_sensor_set_sensor_mode(PRESSURE_SENSOR_ULTRA_HIGH_RESOLUTION);
   pressure_sensor_read_calib_data();
 
-  MPU6050_init(&ctx);
+  MPU6050_init(&MPU6050);
 
   OLED_Init();
   OLED_setDisplayOn();
   menu_process_init();
   HAL_GPIO_WritePin(MCU_PWR_EN_GPIO_Port, MCU_PWR_EN_Pin, true);
+//  HAL_TIM_Base_Start_IT(&htim4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    QMC5883L_process();
+//    QMC5883L_process();
     menu_process();
     button_process();
     OLED_update();
+    HAL_Delay(50);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -179,10 +183,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
@@ -204,7 +208,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_ADC;
-  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
   PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -213,7 +217,10 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+{
+    HAL_GPIO_TogglePin(BUZZER_GPIO_Port, BUZZER_Pin);
+}
 /* USER CODE END 4 */
 
 /**
