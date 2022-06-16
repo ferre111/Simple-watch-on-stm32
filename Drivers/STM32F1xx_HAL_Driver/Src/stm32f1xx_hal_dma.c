@@ -555,7 +555,7 @@ HAL_StatusTypeDef HAL_DMA_PollForTransfer(DMA_HandleTypeDef *hdma, uint32_t Comp
       return HAL_ERROR;
     }
     /* Check for the Timeout */
-    if(Timeout != MPU6050_I2C_TIMEOUT)
+    if(Timeout != HAL_MAX_DELAY)
     {
       if((Timeout == 0U) || ((HAL_GetTick() - tickstart) > Timeout))
       {

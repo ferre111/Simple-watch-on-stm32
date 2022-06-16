@@ -217,6 +217,26 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void main_goto_stop_mode(void)
+{
+	OLED_setDisplayOff();
+	MPU6050_deinit();
+	HAL_Delay(50);
+	MPU6050_sleep();
+	HAL_SuspendTick();
+	HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+}
+
+void main_goto_normal_mode(void)
+{
+	HAL_Init();
+	SystemClock_Config();
+	OLED_setDisplayOn();
+	MPU6050_init(&MPU6050);
+}
+
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
     HAL_GPIO_TogglePin(BUZZER_GPIO_Port, BUZZER_Pin);

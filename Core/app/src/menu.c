@@ -32,14 +32,28 @@ static void check_page_flag(void);
 
 void menu_set_next_page_flag(void)
 {
-    ctx.next_page_flag = true;
+	if (ctx.enable_page_change)
+	{
+		ctx.next_page_flag = true;
+	}
 }
 
 //----------------------------------------------------------------------
 
 void menu_set_prev_page_flag(void)
 {
-    ctx.prev_page_flag = true;
+
+	if (ctx.enable_page_change)
+	{
+		ctx.prev_page_flag = true;
+	}
+}
+
+//----------------------------------------------------------------------
+
+void menu_toggle_flag_enable_page_change(void)
+{
+	ctx.enable_page_change = !ctx.enable_page_change;
 }
 
 //----------------------------------------------------------------------
@@ -47,6 +61,7 @@ void menu_set_prev_page_flag(void)
 void menu_process_init(void)
 {
     ctx.page_tab[ctx.page].init_fun();  //init first page
+    button_set_callback_double_press_function(menu_toggle_flag_enable_page_change);
 }
 
 //----------------------------------------------------------------------

@@ -172,6 +172,7 @@ typedef struct
     drawable_t          drawables[OLED_MAX_DRAWABLES_COUNT];             // drrawable objects
     uint8_t             firstBufferAvailable : 1;
     uint8_t             pagetoSend;
+    bool				oled_disable;
 } oled_t;
 
 oled_t oled;
@@ -506,36 +507,38 @@ void OLED_Init()
 
 void OLED_update()
 {
-    /* clear buffer content */
-    clearScreen();
-    /* updata buffer with drawable objects */
-    for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
-    {
-        if(oled.drawables[i].common.isUsed)
-        {
-            switch(oled.drawables[i].common.type)
-            {
-            case TEXT_FIELD:
-                printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                          oled.drawables[i].spec.textField.text, oled.drawables[i].spec.textField.size);
-                break;
-            case LINE:
-                drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                         oled.drawables[i].spec.line.x1, oled.drawables[i].spec.line.y1);
-                break;
-            case RECTANGLE:
-                drawRect(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                        oled.drawables[i].common.x0 + oled.drawables[i].spec.rectangle.width,
-                         oled.drawables[i].common.y0 + oled.drawables[i].spec.rectangle.height,
-                         WHITE);
-                break;
-            case IMAGE:
-                drawImage(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
-                          oled.drawables[i].spec.image.imageArray);
-                break;
-            }
-        }
-    }
+	if (!oled.oled_disable) {
+		/* clear buffer content */
+		clearScreen();
+		/* updata buffer with drawable objects */
+		for(uint8_t i = 0; i < OLED_MAX_DRAWABLES_COUNT; i++)
+		{
+			if(oled.drawables[i].common.isUsed)
+			{
+				switch(oled.drawables[i].common.type)
+				{
+				case TEXT_FIELD:
+					printText(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+							  oled.drawables[i].spec.textField.text, oled.drawables[i].spec.textField.size);
+					break;
+				case LINE:
+					drawLine(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+							 oled.drawables[i].spec.line.x1, oled.drawables[i].spec.line.y1);
+					break;
+				case RECTANGLE:
+					drawRect(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+							oled.drawables[i].common.x0 + oled.drawables[i].spec.rectangle.width,
+							 oled.drawables[i].common.y0 + oled.drawables[i].spec.rectangle.height,
+							 WHITE);
+					break;
+				case IMAGE:
+					drawImage(oled.drawables[i].common.x0, oled.drawables[i].common.y0,
+							  oled.drawables[i].spec.image.imageArray);
+					break;
+				}
+			}
+		}
+	}
 
     /* send updated buffer to OLED */
 //    while(oled.pagetoSend != 0);
@@ -556,11 +559,13 @@ void OLED_update()
 
 void OLED_setDisplayOn()
 {
+	oled.oled_disable = false;
     sendCommand(OLED_CMD_SetDisplayON);
 }
 
 void OLED_setDisplayOff()
 {
+	oled.oled_disable = true;
     sendCommand(OLED_CMD_SetDisplayOFF);
 }
 

@@ -52,7 +52,8 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-
+void main_goto_stop_mode(void);
+void main_goto_normal_mode(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

@@ -66,6 +66,7 @@ struct menu_ctx
     enum menu_pages page;
     bool next_page_flag;
     bool prev_page_flag;
+    bool enable_page_change;
 
     struct page *page_tab;
 };
@@ -84,6 +85,10 @@ void menu_process_init(void);
  * @brief   This function should be insert in main loop.
  */
 void menu_process(void);
+
+//----------------------------------------------------------------------
+
+void menu_toggle_flag_enable_page_change(void);
 
 //----------------------------------------------------------------------
 

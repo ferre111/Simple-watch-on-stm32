@@ -833,7 +833,7 @@ HAL_StatusTypeDef FLASH_WaitForLastOperation(uint32_t Timeout)
      
   while(__HAL_FLASH_GET_FLAG(FLASH_FLAG_BSY)) 
   { 
-    if (Timeout != MPU6050_I2C_TIMEOUT)
+    if (Timeout != HAL_MAX_DELAY)
     {
       if((Timeout == 0U) || ((HAL_GetTick()-tickstart) > Timeout))
       {
@@ -878,7 +878,7 @@ HAL_StatusTypeDef FLASH_WaitForLastOperationBank2(uint32_t Timeout)
      
   while(__HAL_FLASH_GET_FLAG(FLASH_FLAG_BSY_BANK2)) 
   { 
-    if (Timeout != MPU6050_I2C_TIMEOUT)
+    if (Timeout != HAL_MAX_DELAY)
     {
       if((Timeout == 0U) || ((HAL_GetTick()-tickstart) > Timeout))
       {

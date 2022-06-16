@@ -273,7 +273,7 @@ HAL_StatusTypeDef HAL_RTCEx_PollForTamper1Event(RTC_HandleTypeDef *hrtc, uint32_
   /* Get the status of the Interrupt */
   while (__HAL_RTC_TAMPER_GET_FLAG(hrtc, RTC_FLAG_TAMP1F) == RESET)
   {
-    if (Timeout != MPU6050_I2C_TIMEOUT)
+    if (Timeout != HAL_MAX_DELAY)
     {
       if ((Timeout == 0U) || ((HAL_GetTick() - tickstart) > Timeout))
       {
