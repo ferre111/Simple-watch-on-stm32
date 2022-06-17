@@ -9,21 +9,13 @@
 
 #include <stdbool.h>
 #include "main.h"
-
-#include "acceleration_page.h"
-#include "compass_page.h"
-#include "gyroscope_page.h"
-#include "RTC_page.h"
-#include "temperature_page.h"
-#include "magnetometer_page.h"
-#include "altitude_page.h"
-#include "spirit_level_page.h"
+#include "battery_managment.h"
 
 //----------------------------------------------------------------------
 
 #define TIME_BETWEEN_PAGE_CHANGE    500 //in ms
 //#define GYRO_REG_VAL_TO_CHANGE_PAGE 15360
-#define GYRO_REG_VAL_TO_CHANGE_PAGE 3000
+#define GYRO_REG_VAL_TO_CHANGE_PAGE 6000
 
 //----------------------------------------------------------------------
 
@@ -67,6 +59,10 @@ struct menu_ctx
     bool next_page_flag;
     bool prev_page_flag;
     bool enable_page_change;
+    enum battery_level previous_battery_level;
+
+    uint8_t battery_level_image_id;
+    uint8_t padlock_image_id;
 
     struct page *page_tab;
 };

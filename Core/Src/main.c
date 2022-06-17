@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include "menu.h"
 #include "button.h"
+#include "battery_managment.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -112,6 +113,7 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -150,7 +152,8 @@ int main(void)
   OLED_Init();
   OLED_setDisplayOn();
   menu_process_init();
-  HAL_GPIO_WritePin(MCU_PWR_EN_GPIO_Port, MCU_PWR_EN_Pin, true);
+  HAL_ADC_Start_IT(&hadc1);
+  battery_managment_voltage_stabilizer_turn_on();
 //  HAL_TIM_Base_Start_IT(&htim4);
   /* USER CODE END 2 */
 
@@ -194,6 +197,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -271,4 +275,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

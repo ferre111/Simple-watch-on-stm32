@@ -5,11 +5,26 @@
  *      Author: Karol Witusik
  */
 #include "menu.h"
+#include "acceleration_page.h"
+#include "compass_page.h"
+#include "gyroscope_page.h"
+#include "RTC_page.h"
+#include "temperature_page.h"
+#include "magnetometer_page.h"
+#include "altitude_page.h"
+#include "spirit_level_page.h"
+#include "images.h"
+
+#define BATERRY_ICON_X_POS 113
+#define BATERRY_ICON_Y_POS 4
+
+#define PADLOCK_ICON_X_POS 0
+#define PADLOCK_ICON_Y_POS 2
 
 //----------------------------------------------------------------------
 
 /* Array of structure with pointer to functions associate with appropriate page*/
-struct page page_tab1[menu_pages_END] =
+struct page page_tab[menu_pages_END] =
 {
     [RTC_page]          = {.init_fun = RTC_page_init,           .draw_fun = RTC_page_draw,          .exit_fun = RTC_page_exit},
     [temperature_page]  = {.init_fun = temperature_page_init,   .draw_fun = temperature_page_draw,  .exit_fun = temperature_page_exit},
@@ -21,7 +36,7 @@ struct page page_tab1[menu_pages_END] =
     [magnetometer_page] = {.init_fun = magnetometer_page_init,  .draw_fun = magnetometer_page_draw, .exit_fun = magnetometer_page_exit},
 };
 
-static struct menu_ctx ctx = {.page = menu_pages_START + 1, .page_tab = page_tab1};
+static struct menu_ctx ctx = {.page = menu_pages_START + 1, .page_tab = page_tab};
 
 //----------------------------------------------------------------------
 
@@ -54,6 +69,13 @@ void menu_set_prev_page_flag(void)
 void menu_toggle_flag_enable_page_change(void)
 {
 	ctx.enable_page_change = !ctx.enable_page_change;
+
+	OLED_deleteObject(ctx.padlock_image_id);
+	if (ctx.enable_page_change) {
+		OLED_createImage(&ctx.padlock_image_id, PADLOCK_ICON_X_POS, PADLOCK_ICON_Y_POS, padlock_open);
+	} else {
+		OLED_createImage(&ctx.padlock_image_id, PADLOCK_ICON_X_POS, PADLOCK_ICON_Y_POS, padlock_close);
+	}
 }
 
 //----------------------------------------------------------------------
@@ -62,14 +84,41 @@ void menu_process_init(void)
 {
     ctx.page_tab[ctx.page].init_fun();  //init first page
     button_set_callback_double_press_function(menu_toggle_flag_enable_page_change);
+    ctx.previous_battery_level = BATTERY_LEVEL_BELOW_25;
+    OLED_createImage(&ctx.battery_level_image_id, BATERRY_ICON_X_POS, BATERRY_ICON_Y_POS, battery_zero);
+
+    ctx.enable_page_change = false;
+    OLED_createImage(&ctx.padlock_image_id, PADLOCK_ICON_X_POS, PADLOCK_ICON_Y_POS, padlock_close);
 }
 
 //----------------------------------------------------------------------
 
 void menu_process(void)
 {
+	enum battery_level current_level;
     draw_current_page();    //draw actual set page
     check_page_flag();
+    current_level = battery_managment_get_state();
+
+    if (current_level != ctx.previous_battery_level) {
+
+    	OLED_deleteObject(ctx.battery_level_image_id);
+    	switch(current_level) {
+    		case BATTERY_LEVEL_BELOW_25:
+    			OLED_createImage(&ctx.battery_level_image_id, BATERRY_ICON_X_POS, BATERRY_ICON_Y_POS, battery_zero);
+    			break;
+    		case BATTERY_LEVEL_ABOVE_25:
+    			OLED_createImage(&ctx.battery_level_image_id, BATERRY_ICON_X_POS, BATERRY_ICON_Y_POS, battery_quarter);
+				break;
+    		case BATTERY_LEVEL_ABOVE_50:
+    			OLED_createImage(&ctx.battery_level_image_id, BATERRY_ICON_X_POS, BATERRY_ICON_Y_POS, battery_half);
+				break;
+    		case BATTERY_LEVEL_ABOVE_75:
+    			OLED_createImage(&ctx.battery_level_image_id, BATERRY_ICON_X_POS, BATERRY_ICON_Y_POS, battery_full);
+				break;
+    	}
+    	ctx.previous_battery_level = current_level;
+    }
 }
 
 //----------------------------------------------------------------------
@@ -102,7 +151,7 @@ static void check_page_flag(void)
 
     if(ctx.prev_page_flag)
     {
-        if((HAL_GetTick() - timestamp) > TIME_BETWEEN_PAGE_CHANGE)               //if prev_page_flag is set and time between previous page change and current flag set is greater than TIME_BETWEEN_PAGE_CHANGE then change page to previous page
+        if((HAL_GetTick() - timestamp) > TIME_BETWEEN_PAGE_CHANGE)              //if prev_page_flag is set and time between previous page change and current flag set is greater than TIME_BETWEEN_PAGE_CHANGE then change page to previous page
         {
             ctx.page_tab[ctx.page].exit_fun();                                  //execute function to deinit page
 

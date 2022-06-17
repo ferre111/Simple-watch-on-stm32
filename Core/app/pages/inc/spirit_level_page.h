@@ -9,9 +9,6 @@
 
 #include "OLED.h"
 #include "MPU6050.h"
-#include "images.h"
-
-
 
 void spirit_level_page_init(void);
 void spirit_level_page_draw(void);

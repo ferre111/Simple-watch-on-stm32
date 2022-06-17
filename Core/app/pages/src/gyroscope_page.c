@@ -5,6 +5,7 @@
  *      Author: Karol Witusik
  */
 
+#include <stdio.h>
 #include "gyroscope_page.h"
 #include "menu.h"
 

@@ -78,8 +78,8 @@ void compass_page_draw(void)
 {
     /* read data from sensor and get average of last AVR readings */
     QMC5883L_get_mag_data(&data);
-    mag_y_buff[p] = data.y - OFFSET_Y;
-    mag_z_buff[p] = data.z - OFFSET_Z;
+    mag_y_buff[p] = data.x - OFFSET_Y;
+    mag_z_buff[p] = -data.y - OFFSET_Z;
 
     p = (p + 1) % AVR_LEN;
     mag_z = 0;

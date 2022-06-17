@@ -5,8 +5,10 @@
  *      Author: Karol Witusik
  */
 
+#include <stdio.h>
 #include "spirit_level_page.h"
 #include "menu.h"
+#include "images.h"
 
 //--------------------------------------------------------------------------------
 
@@ -38,8 +40,8 @@ static struct MPU6050_acc_data data;
 void spirit_level_page_init(void)
 {
     /* create all the drawable objects present on this page */
-    OLED_createTextField(&level_data_x_id, 92, 0, level_data_x_txt, 1);
-    OLED_createTextField(&level_data_y_id, 92, 8, level_data_y_txt, 1);
+    OLED_createTextField(&level_data_x_id, 92, 47, level_data_x_txt, 1);
+    OLED_createTextField(&level_data_y_id, 92, 55, level_data_y_txt, 1);
 
     OLED_createImage(&spirit_level_pointer_id, INITIAL_POINTER_COORD_X, INITIAL_POINTER_COORD_Y, spirit_level_pointer);
     OLED_createImage(&spirit_level_image_id, 0, 0, spirit_level_image);
@@ -51,8 +53,8 @@ void spirit_level_page_draw(void)
 {
     /* read data from senor and evaluate position of device */
     MPU6050_get_acc_data(&data);
-    level_data_x = data.y * 45 / 500;
-    level_data_y = data.z * 45 / 500;
+    level_data_x = data.x * 45 / 500;
+    level_data_y = data.y * 45 / 500;
 
     /* update printed values of angles */
     snprintf(level_data_x_txt, 20, PRINT_DEG(x, level_data_x), level_data_x);
